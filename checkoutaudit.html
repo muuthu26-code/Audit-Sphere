@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Check-Out Audit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Native App Feel for iOS/Android */
+        body {
+            -webkit-tap-highlight-color: transparent;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+        }
+        
+        button, input, textarea {
+            touch-action: manipulation;
+        }
+
+        /* Hide scrollbars for smooth swiping on mobile */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Print media query */
+        @media print {
+            body { background-color: white !important; color: black !important; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .print-border { border: 1px solid #e5e7eb !important; }
+            .print-shadow-none { box-shadow: none !important; }
+            .page-break { page-break-before: always; }
+            .avoid-break { page-break-inside: avoid; }
+            
+            /* Clean up inputs for printing */
+            input, textarea { 
+                border: none !important; 
+                background: transparent !important;
+                resize: none !important;
+                padding: 0 !important;
+            }
+            input::placeholder, textarea::placeholder { color: transparent !important; }
+            
+            /* Force background colors to show in print (Chrome/Edge) */
+            * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
+        }
+        
+        /* On-Screen Preview Mode (Mimics print layout) */
+        body.preview-mode { background-color: white !important; color: black !important; }
+        body.preview-mode .no-print { display: none !important; }
+        body.preview-mode .print-only { display: block !important; }
+        body.preview-mode .print-border { border: 1px solid #e5e7eb !important; }
+        body.preview-mode .print-shadow-none { box-shadow: none !important; }
+        body.preview-mode input, body.preview-mode textarea { 
+            border: none !important; 
+            background: transparent !important;
+            resize: none !important;
+            padding: 0 !important;
+            pointer-events: none; /* Make uneditable */
+        }
+        body.preview-mode input::placeholder, body.preview-mode textarea::placeholder { color: transparent !important; }
+        body.preview-mode .hidden.print\:block { display: block !important; }
+        body.preview-mode #exit-preview-btn { display: flex !important; }
+
+        /* Custom toggles */
+        .status-btn.selected-compliant { background-color: #10b981; color: white; border-color: #10b981; }
+        .status-btn.selected-non-compliant { background-color: #ef4444; color: white; border-color: #ef4444; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
+
+    <!-- Exit Preview Floating Button -->
+    <button id="exit-preview-btn" onclick="app.togglePreview()" class="fixed bottom-8 right-8 bg-slate-800 hover:bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl font-bold z-50 transition-transform hover:scale-105 hidden items-center gap-2">
+        <i class="fa-solid fa-eye-slash"></i> Exit Preview
+    </button>
+
+    <!-- Dashboard View -->
+    <div id="dashboard-view" class="max-w-5xl mx-auto p-4 sm:p-6 transition-opacity duration-300">
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-10 mt-4 sm:mt-6 gap-4">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-3">
+                    <i class="fa-solid fa-clipboard-check text-blue-600"></i>
+                    Check-Out Audit
+                </h1>
+                <p class="text-sm sm:text-base text-slate-500 mt-1">Manage and file your front-desk check-out audit reports.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                <button onclick="app.showTrash()" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 px-4 py-2.5 rounded-lg font-medium flex-1 sm:flex-none justify-center flex items-center gap-2 transition-colors shadow-sm">
+                    <i class="fa-solid fa-trash-can"></i> Trash
+                </button>
+                <button onclick="window.location.reload()" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-lg font-medium flex-1 sm:flex-none justify-center flex items-center gap-2 transition-colors shadow-sm">
+                    <i class="fa-solid fa-arrows-rotate"></i> Refresh
+                </button>
+                <button onclick="app.createNewReport()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium flex-1 sm:flex-none justify-center flex items-center gap-2 transition-colors shadow-sm">
+                    <i class="fa-solid fa-plus"></i> New Audit
+                </button>
+            </div>
+        </header>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-200 bg-slate-50/50">
+                <h2 class="text-lg font-semibold text-slate-800">Recent Reports</h2>
+            </div>
+            
+            <div id="empty-state" class="p-12 text-center text-slate-500 flex flex-col items-center hidden">
+                <i class="fa-solid fa-folder-open text-5xl text-slate-300 mb-4"></i>
+                <p class="text-lg">No audit reports filed yet.</p>
+                <p class="text-sm mt-1">Click the "New Audit" button to get started.</p>
+            </div>
+
+            <ul id="report-list" class="divide-y divide-slate-100">
+                <!-- Reports injected via JS -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- Trash View -->
+    <div id="trash-view" class="max-w-5xl mx-auto p-4 sm:p-6 transition-opacity duration-300 hidden">
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-10 mt-4 sm:mt-6 gap-4">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-3">
+                    <i class="fa-solid fa-trash-can text-slate-500"></i>
+                    Trash
+                </h1>
+                <p class="text-sm sm:text-base text-slate-500 mt-1">Items are automatically deleted after 30 days.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                <button onclick="app.showDashboard()" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-lg font-medium flex-1 sm:flex-none justify-center flex items-center gap-2 transition-colors shadow-sm">
+                    <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+                </button>
+            </div>
+        </header>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div id="trash-empty-state" class="p-12 text-center text-slate-500 flex flex-col items-center hidden">
+                <i class="fa-solid fa-wind text-5xl text-slate-300 mb-4"></i>
+                <p class="text-lg">Trash is empty.</p>
+            </div>
+
+            <ul id="trash-list" class="divide-y divide-slate-100">
+                <!-- Trashed Reports injected via JS -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- Editor View -->
+    <div id="editor-view" class="max-w-5xl mx-auto p-3 sm:p-6 hidden print:p-0 print:max-w-none print:block">
+        
+        <!-- Top Action Bar (Hidden in Print & Preview) -->
+        <div class="no-print flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-slate-200 sticky top-0 z-50 gap-3">
+            <div class="flex justify-between w-full sm:w-auto items-center">
+                <button onclick="app.showDashboard()" class="text-slate-600 hover:text-slate-900 flex items-center gap-2 font-medium transition-colors text-sm sm:text-base">
+                    <i class="fa-solid fa-arrow-left"></i> Back
+                </button>
+                <span id="save-status-mobile" class="text-xs text-slate-400 sm:hidden">Saved locally</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                <span id="save-status" class="hidden sm:inline text-sm text-slate-400 mr-2">Saved locally</span>
+                <button onclick="app.refreshReport()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 p-2 sm:px-4 sm:py-2 rounded-lg font-medium flex items-center justify-center transition-colors" title="Clear and reset form">
+                    <i class="fa-solid fa-arrows-rotate text-slate-500"></i><span class="hidden sm:inline ml-2">Refresh</span>
+                </button>
+                <button onclick="app.togglePreview()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-medium flex-1 sm:flex-none flex items-center justify-center gap-2 transition-colors text-sm sm:text-base">
+                    <i class="fa-solid fa-eye"></i> Preview
+                </button>
+                <button onclick="app.saveReport()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-medium flex-1 sm:flex-none flex items-center justify-center gap-2 transition-colors text-sm sm:text-base">
+                    <i class="fa-solid fa-save text-slate-500"></i> Save
+                </button>
+                <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-medium w-full sm:w-auto flex items-center justify-center gap-2 transition-colors text-sm sm:text-base mt-1 sm:mt-0">
+                    <i class="fa-solid fa-file-pdf"></i> Export PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Report Header / Metadata -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-8 mb-6 print-shadow-none print-border">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4 gap-4">
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-900">Check-Out Audit Report</h2>
+                <!-- Score Display -->
+                <div class="w-full sm:w-auto text-center bg-slate-50 rounded-xl p-3 border border-slate-200 min-w-[120px]">
+                    <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Audit Score</div>
+                    <div id="score-percentage" class="text-2xl font-bold text-slate-800">0%</div>
+                    <div id="score-details" class="text-xs text-slate-400 mt-1">0/20 Passed</div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-2">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Date Conducted On</label>
+                    <input type="date" id="meta-date" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('date', this.value)">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Time</label>
+                    <input type="time" id="meta-time" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('time', this.value)">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Auditor Name</label>
+                    <input type="text" id="meta-auditor" placeholder="Enter auditor name" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('auditor', this.value)">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Guest Name</label>
+                    <input type="text" id="meta-guestName" placeholder="Enter guest name" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('guestName', this.value)">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Room No</label>
+                    <input type="text" id="meta-roomNo" placeholder="Enter room number" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('roomNo', this.value)">
+                </div>
+                <div></div> <!-- Spacer -->
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">GSA Name</label>
+                    <input type="text" id="meta-gsaName" placeholder="Enter GSA name" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('gsaName', this.value)">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Supervisor on Shift</label>
+                    <input type="text" id="meta-supervisor" placeholder="Enter supervisor name" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('supervisor', this.value)">
+                </div>
+            </div>
+        </div>
+
+        <!-- Checklist -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden print-shadow-none print-border mb-6">
+            <div id="checklist-container" class="divide-y divide-slate-100">
+                <!-- Checklist items injected via JS -->
+            </div>
+        </div>
+
+        <!-- Final Observations -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-8 mb-6 print-shadow-none print-border avoid-break">
+            <label class="block text-lg font-bold text-slate-900 mb-3">Audit Observation</label>
+            <textarea id="meta-observation" rows="4" placeholder="Enter any final overall observations..." class="w-full border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all text-base text-slate-800 print:p-0 print:border-none" onchange="app.updateMeta('observation', this.value)"></textarea>
+        </div>
+
+    </div>
+
+    <script>
+        // HTML Escaping function to secure rendering inputs
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag]));
+        }
+
+        const AUDIT_QUESTIONS = [
+            "Did the GSA make an eye contact with the guests and smile?",
+            "Was the guest greeted in a warm & friendly manner?",
+            "Acknowledging the Guest - Namaste Mr. (if guest name is known) May I Help you.",
+            "Ask for Name and Room Number to display bill information.",
+            "Tone of Voice - Enquiring the guest about their stay.",
+            "If Non- Member - Enquire the guest would be interested in becoming member (as its last chance to do so prior to check-out).",
+            "If member thank the guest for being Radisson Reward Member.",
+            "Billing - Bill details Checked (E-mail, Address, Company Name & GST number).",
+            "Digital / Printed Invoice - Was Invoice shown to guest for review.",
+            "Mode of Payment - If member Confirm Payment Method (Radisson rewards, Redemption night, Cash, Card, BTC & others).",
+            "Guest Invoice - Inform the guest that their Invoice would be sent digitally.",
+            "Was there an interaction between the guest and the associate?",
+            "Interaction by GRE / D.M - Duty manager/GRE spoke interaction with the guest.",
+            "Did staff demonstrate Service Golden Rules through Check-Out Process?",
+            "Farewell - Upon check-out, thank the guests for staying with us.",
+            "Bot shot feedback obtained.",
+            "Feedback Request - Review Pro and Other Social Medial Platform.",
+            "Guest Feedback.",
+            "Time - Time taken for check-out.",
+            "Was the key card collected from guest."
+        ];
+
+        const app = {
+            reports: [],
+            currentReportId: null,
+            
+            init() {
+                // Unique key for the New Check-Out Audits
+                const stored = localStorage.getItem('hotelCheckoutAuditsNew');
+                if (stored) {
+                    try {
+                        this.reports = JSON.parse(stored);
+                    } catch (e) {
+                        console.error("Could not parse stored reports.");
+                    }
+                }
+                this.cleanUpTrash(); // Ensures 30-day strict cleanup happens on load
+                this.renderDashboard();
+            },
+
+            saveToLocal() {
+                localStorage.setItem('hotelCheckoutAuditsNew', JSON.stringify(this.reports));
+                
+                const statusIndicator = document.getElementById('save-status');
+                const statusIndicatorMobile = document.getElementById('save-status-mobile');
+                
+                if(statusIndicator) statusIndicator.textContent = "Saving...";
+                if(statusIndicatorMobile) statusIndicatorMobile.textContent = "Saving...";
+                
+                setTimeout(() => {
+                    if(statusIndicator) statusIndicator.textContent = "Saved locally";
+                    if(statusIndicatorMobile) statusIndicatorMobile.textContent = "Saved locally";
+                }, 1000);
+            },
+
+            cleanUpTrash() {
+                const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+                const now = Date.now();
+                let changed = false;
+
+                this.reports = this.reports.filter(report => {
+                    if (report.deletedAt) {
+                        // Check if it's older than 30 days
+                        if (now - report.deletedAt > THIRTY_DAYS) {
+                            changed = true;
+                            return false; // Permanently delete because it is > 30 days
+                        }
+                    }
+                    return true;
+                });
+
+                if (changed) this.saveToLocal();
+            },
+
+            showDashboard() {
+                document.body.classList.remove('preview-mode');
+                document.getElementById('trash-view').classList.add('hidden');
+                document.getElementById('editor-view').classList.add('hidden');
+                document.getElementById('dashboard-view').classList.remove('hidden');
+                this.currentReportId = null;
+                this.renderDashboard();
+            },
+
+            showTrash() {
+                document.body.classList.remove('preview-mode');
+                document.getElementById('dashboard-view').classList.add('hidden');
+                document.getElementById('editor-view').classList.add('hidden');
+                document.getElementById('trash-view').classList.remove('hidden');
+                this.currentReportId = null;
+                this.renderTrash();
+            },
+
+            showEditor() {
+                document.getElementById('dashboard-view').classList.add('hidden');
+                document.getElementById('trash-view').classList.add('hidden');
+                document.getElementById('editor-view').classList.remove('hidden');
+            },
+
+            togglePreview() {
+                document.body.classList.toggle('preview-mode');
+                window.scrollTo(0, 0);
+            },
+
+            createNewReport() {
+                const newReport = {
+                    id: Date.now().toString(),
+                    meta: {
+                        date: new Date().toISOString().split('T')[0],
+                        time: '',
+                        guestName: '',
+                        gsaName: '',
+                        roomNo: '',
+                        supervisor: '',
+                        auditor: '',
+                        observation: ''
+                    },
+                    items: {} // Will hold { index: { status: 'compliant'|'non-compliant'|null, remarks: '' } }
+                };
+                
+                // Initialize items
+                AUDIT_QUESTIONS.forEach((q, idx) => {
+                    newReport.items[idx] = { status: null, remarks: '' };
+                });
+
+                this.reports.unshift(newReport);
+                this.currentReportId = newReport.id;
+                this.saveToLocal();
+                this.renderEditor();
+                this.showEditor();
+            },
+
+            openReport(id) {
+                this.currentReportId = id;
+                this.renderEditor();
+                this.showEditor();
+            },
+
+            deleteReport(id, event) {
+                event.stopPropagation();
+                if(confirm("Move this Check-Out report to the trash?")) {
+                    const report = this.reports.find(r => r.id === id);
+                    if (report) {
+                        report.deletedAt = Date.now();
+                        this.saveToLocal();
+                        this.renderDashboard();
+                    }
+                }
+            },
+
+            restoreReport(id, event) {
+                event.stopPropagation();
+                const report = this.reports.find(r => r.id === id);
+                if (report) {
+                    delete report.deletedAt;
+                    this.saveToLocal();
+                    this.renderTrash();
+                }
+            },
+
+            getCurrentReport() {
+                return this.reports.find(r => r.id === this.currentReportId);
+            },
+
+            refreshReport() {
+                if(confirm("Are you sure you want to refresh this report? This will clear all current inputs and selections.")) {
+                    const report = this.getCurrentReport();
+                    if(report) {
+                        report.meta = {
+                            date: new Date().toISOString().split('T')[0],
+                            time: '', guestName: '', gsaName: '', roomNo: '', supervisor: '', auditor: '', observation: ''
+                        };
+                        AUDIT_QUESTIONS.forEach((q, idx) => {
+                            report.items[idx] = { status: null, remarks: '' };
+                        });
+                        this.saveToLocal();
+                        this.renderEditor();
+                    }
+                }
+            },
+
+            calculateScore(report) {
+                let compliant = 0;
+                let nonCompliant = 0;
+                const total = AUDIT_QUESTIONS.length;
+                
+                for (let i = 0; i < total; i++) {
+                    if (report.items[i] && report.items[i].status === 'compliant') compliant++;
+                    if (report.items[i] && report.items[i].status === 'non-compliant') nonCompliant++;
+                }
+                
+                const percentage = Math.round((compliant / total) * 100) || 0;
+                return { compliant, nonCompliant, total, percentage };
+            },
+
+            updateScoreUI() {
+                const report = this.getCurrentReport();
+                if (!report) return;
+                const score = this.calculateScore(report);
+                
+                const pctEl = document.getElementById('score-percentage');
+                const detEl = document.getElementById('score-details');
+                if (pctEl && detEl) {
+                    pctEl.textContent = `${score.percentage}%`;
+                    detEl.textContent = `${score.compliant}/${score.total} Passed`;
+                    
+                    // Update color based on score
+                    pctEl.className = `text-2xl font-bold ${score.percentage >= 80 ? 'text-green-600' : score.percentage >= 50 ? 'text-amber-500' : 'text-red-600'}`;
+                }
+            },
+
+            updateMeta(field, value) {
+                const report = this.getCurrentReport();
+                if (report) {
+                    report.meta[field] = value;
+                    this.saveToLocal();
+                }
+            },
+
+            updateItemStatus(index, status) {
+                const report = this.getCurrentReport();
+                if (report) {
+                    // Toggle off if clicking the already selected status
+                    report.items[index].status = (report.items[index].status === status) ? null : status;
+                    this.saveToLocal();
+                    this.renderChecklist(); // Re-render just the checklist part
+                    this.updateScoreUI(); // Update the score display
+                }
+            },
+
+            updateItemRemarks(index, value) {
+                const report = this.getCurrentReport();
+                if (report) {
+                    report.items[index].remarks = value;
+                    this.saveToLocal();
+                }
+            },
+
+            saveReport() {
+                this.saveToLocal();
+                alert("Draft saved successfully.");
+            },
+
+            renderDashboard() {
+                const list = document.getElementById('report-list');
+                const emptyState = document.getElementById('empty-state');
+                
+                list.innerHTML = '';
+                
+                const activeReports = this.reports.filter(r => !r.deletedAt);
+
+                if (activeReports.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    list.classList.add('hidden');
+                    return;
+                }
+                
+                emptyState.classList.add('hidden');
+                list.classList.remove('hidden');
+
+                activeReports.forEach(report => {
+                    const guestName = escapeHTML(report.meta.guestName) || "Unknown Guest";
+                    const roomInfo = report.meta.roomNo ? `Room ${escapeHTML(report.meta.roomNo)}` : "No Room Info";
+                    const date = escapeHTML(report.meta.date) || "No Date";
+                    const score = this.calculateScore(report);
+                    const scoreColorClass = score.percentage >= 80 ? 'text-green-700 bg-green-100' : score.percentage >= 50 ? 'text-amber-700 bg-amber-100' : 'text-red-700 bg-red-100';
+                    
+                    const li = document.createElement('li');
+                    li.className = "p-4 hover:bg-slate-50 cursor-pointer transition-colors flex items-center justify-between group";
+                    li.onclick = () => this.openReport(report.id);
+                    
+                    li.innerHTML = `
+                        <div class="flex items-center gap-4">
+                            <div class="bg-blue-100 p-3 rounded-lg text-blue-600">
+                                <i class="fa-solid fa-clipboard-check text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-slate-900 text-lg">
+                                    ${guestName} - ${roomInfo}
+                                </h3>
+                                <div class="flex items-center gap-3 text-sm text-slate-500 mt-1">
+                                    <span class="px-2 py-0.5 rounded font-bold ${scoreColorClass}">${score.percentage}% Score</span>
+                                    <span><i class="fa-regular fa-calendar mr-1"></i> ${date}</span>
+                                    ${report.meta.auditor ? `<span>•</span><span>Auditor: ${escapeHTML(report.meta.auditor)}</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="app.deleteReport('${report.id}', event)" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100" title="Move to Trash">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    `;
+                    list.appendChild(li);
+                });
+            },
+
+            renderTrash() {
+                const list = document.getElementById('trash-list');
+                const emptyState = document.getElementById('trash-empty-state');
+                
+                list.innerHTML = '';
+                
+                const trashedReports = this.reports.filter(r => r.deletedAt);
+
+                if (trashedReports.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    list.classList.add('hidden');
+                    return;
+                }
+                
+                emptyState.classList.add('hidden');
+                list.classList.remove('hidden');
+
+                const now = Date.now();
+                const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+
+                trashedReports.forEach(report => {
+                    const guestName = escapeHTML(report.meta.guestName) || "Unknown Guest";
+                    const roomInfo = report.meta.roomNo ? `Room ${escapeHTML(report.meta.roomNo)}` : "No Room Info";
+                    const date = escapeHTML(report.meta.date) || "No Date";
+                    
+                    const timeInTrash = now - report.deletedAt;
+                    const daysLeft = Math.ceil((THIRTY_DAYS - timeInTrash) / (1000 * 60 * 60 * 24));
+                    const daysLeftText = daysLeft > 1 ? `${daysLeft} days left` : (daysLeft === 1 ? `1 day left` : `Deleting today`);
+
+                    const li = document.createElement('li');
+                    li.className = "p-4 hover:bg-slate-50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between group gap-4";
+                    
+                    li.innerHTML = `
+                        <div class="flex items-center gap-4">
+                            <div class="bg-slate-100 p-3 rounded-lg text-slate-400">
+                                <i class="fa-solid fa-file-excel text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-slate-500 text-lg line-through">
+                                    ${guestName} - ${roomInfo}
+                                </h3>
+                                <div class="flex items-center gap-3 text-sm text-slate-400 mt-1">
+                                    <span><i class="fa-regular fa-calendar mr-1"></i> ${date}</span>
+                                    <span>•</span>
+                                    <span class="text-orange-500 font-medium"><i class="fa-solid fa-clock mr-1"></i> ${daysLeftText}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="app.restoreReport('${report.id}', event)" class="px-3 py-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors font-medium flex items-center gap-2" title="Restore Report">
+                                <i class="fa-solid fa-arrow-rotate-left"></i> Restore
+                            </button>
+                        </div>
+                    `;
+                    list.appendChild(li);
+                });
+            },
+
+            renderEditor() {
+                const report = this.getCurrentReport();
+                if (!report) return;
+
+                // Populate Metadata
+                document.getElementById('meta-date').value = report.meta.date || '';
+                document.getElementById('meta-time').value = report.meta.time || '';
+                document.getElementById('meta-guestName').value = report.meta.guestName || '';
+                document.getElementById('meta-gsaName').value = report.meta.gsaName || '';
+                document.getElementById('meta-roomNo').value = report.meta.roomNo || '';
+                document.getElementById('meta-supervisor').value = report.meta.supervisor || '';
+                document.getElementById('meta-auditor').value = report.meta.auditor || '';
+                document.getElementById('meta-observation').value = report.meta.observation || '';
+
+                this.renderChecklist();
+                this.updateScoreUI();
+            },
+
+            renderChecklist() {
+                const report = this.getCurrentReport();
+                const container = document.getElementById('checklist-container');
+                container.innerHTML = '';
+
+                AUDIT_QUESTIONS.forEach((question, index) => {
+                    const itemData = report.items[index] || { status: null, remarks: '' };
+                    
+                    const isCompliant = itemData.status === 'compliant';
+                    const isNonCompliant = itemData.status === 'non-compliant';
+
+                    const row = document.createElement('div');
+                    row.className = "p-4 sm:p-6 hover:bg-slate-50/50 transition-colors avoid-break border-b border-slate-100 last:border-0";
+
+                    row.innerHTML = `
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+                            <!-- Question -->
+                            <div class="md:col-span-6 pr-0 md:pr-4">
+                                <span class="text-slate-400 text-sm font-bold mr-2">${index + 1}.</span>
+                                <span class="text-slate-800 font-medium">${escapeHTML(question)}</span>
+                                
+                                <!-- Print Only Status Display -->
+                                <div class="hidden print:block mt-2 font-bold text-sm">
+                                    Status: 
+                                    ${isCompliant ? '<span class="text-green-600 border border-green-600 px-2 py-0.5 rounded">Compliant</span>' : 
+                                     isNonCompliant ? '<span class="text-red-600 border border-red-600 px-2 py-0.5 rounded">Non-Compliant</span>' : 
+                                     '<span class="text-slate-400 border border-slate-300 px-2 py-0.5 rounded">Not Evaluated</span>'}
+                                </div>
+                            </div>
+
+                            <!-- Status Buttons (Hidden in Print & Preview) -->
+                            <div class="md:col-span-3 flex gap-2 sm:gap-3 justify-center no-print">
+                                <button onclick="app.updateItemStatus(${index}, 'compliant')" 
+                                    class="status-btn flex-1 py-3 md:py-2 px-3 border border-slate-200 rounded-md text-sm font-medium transition-colors ${isCompliant ? 'selected-compliant' : 'text-slate-600 hover:bg-slate-100'}">
+                                    <i class="fa-solid fa-check mr-1"></i> Yes
+                                </button>
+                                <button onclick="app.updateItemStatus(${index}, 'non-compliant')" 
+                                    class="status-btn flex-1 py-3 md:py-2 px-3 border border-slate-200 rounded-md text-sm font-medium transition-colors ${isNonCompliant ? 'selected-non-compliant' : 'text-slate-600 hover:bg-slate-100'}">
+                                    <i class="fa-solid fa-xmark mr-1"></i> No
+                                </button>
+                            </div>
+
+                            <!-- Remarks Action -->
+                            <div class="md:col-span-3 flex flex-col gap-2">
+                                <textarea rows="2" 
+                                    onchange="app.updateItemRemarks(${index}, this.value)"
+                                    placeholder="Add remarks..." 
+                                    class="w-full text-base sm:text-sm p-2 border border-slate-200 rounded-md focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none print:p-0 print:border-none print:bg-transparent print:resize-none">${escapeHTML(itemData.remarks)}</textarea>
+                            </div>
+                        </div>
+                    `;
+                    
+                    container.appendChild(row);
+                });
+            }
+        };
+
+        // Initialize application on load
+        window.onload = () => {
+            app.init();
+        };
+    </script>
+</body>
+</html>

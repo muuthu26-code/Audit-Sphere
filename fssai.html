@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#4f46e5">
+    <!-- Permissive Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>FSSAI Food Safety Audit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Native App Feel for iOS/Android */
+        body {
+            -webkit-tap-highlight-color: transparent;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+        }
+        
+        button, input, textarea {
+            touch-action: manipulation;
+        }
+
+        /* Hide scrollbars for smooth swiping on mobile */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Print media query */
+        @media print {
+            body { background-color: white !important; color: black !important; font-size: 11px !important; line-height: 1.3 !important; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .print-border { border: 1px solid #e5e7eb !important; }
+            .print-shadow-none { box-shadow: none !important; }
+            .page-break { page-break-before: always; }
+            .avoid-break { page-break-inside: avoid; }
+            
+            input, textarea { 
+                border: none !important; 
+                background: transparent !important;
+                resize: none !important;
+                padding: 0 !important;
+                min-height: 0 !important;
+            }
+            
+            * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
+        }
+        
+        /* On-Screen Preview Mode */
+        body.preview-mode { background-color: white !important; color: black !important; }
+        body.preview-mode .no-print { display: none !important; }
+        body.preview-mode .print-only { display: block !important; }
+        body.preview-mode .print-border { border: 1px solid #e5e7eb !important; }
+        body.preview-mode input, body.preview-mode textarea { 
+            border: none !important; 
+            background: transparent !important;
+            resize: none !important;
+            padding: 0 !important;
+            pointer-events: none;
+        }
+        body.preview-mode #exit-preview-btn { display: flex !important; }
+
+        /* Status Toggles */
+        .status-btn.selected-c { background-color: #10b981; color: white; border-color: #10b981; }
+        .status-btn.selected-pc { background-color: #f59e0b; color: white; border-color: #f59e0b; }
+        .status-btn.selected-nc { background-color: #ef4444; color: white; border-color: #ef4444; }
+        .status-btn.selected-na { background-color: #64748b; color: white; border-color: #64748b; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
+
+    <!-- Exit Preview Floating Button -->
+    <button id="exit-preview-btn" onclick="app.togglePreview()" class="fixed bottom-8 right-8 bg-slate-800 hover:bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl font-bold z-50 transition-transform hover:scale-105 hidden items-center gap-2">
+        <i class="fa-solid fa-eye-slash"></i> Exit Preview
+    </button>
+
+    <!-- Dashboard View -->
+    <div id="dashboard-view" class="max-w-5xl mx-auto p-4 sm:p-6 transition-opacity duration-300">
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-10 mt-4 sm:mt-6 gap-4">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-3">
+                    <i class="fa-solid fa-shield-halved text-indigo-600"></i>
+                    FSSAI Food Safety Audit
+                </h1>
+                <p class="text-sm sm:text-base text-slate-500 mt-1">Manage and file your FSSAI hygiene audit reports.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                <button onclick="app.showTrash()" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 px-4 py-2.5 rounded-lg font-medium flex-1 sm:flex-none justify-center flex items-center gap-2 transition-colors shadow-sm">
+                    <i class="fa-solid fa-trash-can"></i> Trash
+                </button>
+                <button onclick="window.location.reload()" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-lg font-medium flex-1 sm:flex-none justify-center flex items-center gap-2 transition-colors shadow-sm">
+                    <i class="fa-solid fa-arrows-rotate"></i> Refresh
+                </button>
+                <button onclick="app.createNewReport()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-medium flex-1 sm:flex-none justify-center flex items-center gap-2 transition-colors shadow-sm">
+                    <i class="fa-solid fa-plus"></i> New FSSAI Audit
+                </button>
+            </div>
+        </header>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-200 bg-slate-50/50">
+                <h2 class="text-lg font-semibold text-slate-800">Recent Audits</h2>
+            </div>
+            
+            <div id="empty-state" class="p-12 text-center text-slate-500 flex flex-col items-center hidden">
+                <i class="fa-solid fa-file-invoice text-5xl text-slate-300 mb-4"></i>
+                <p class="text-lg">No audit reports available.</p>
+                <p class="text-sm mt-1">Click "New FSSAI Audit" to begin a hygiene inspection.</p>
+            </div>
+
+            <ul id="report-list" class="divide-y divide-slate-100">
+                <!-- Reports injected via JS -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- Trash View -->
+    <div id="trash-view" class="max-w-5xl mx-auto p-4 sm:p-6 transition-opacity duration-300 hidden">
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-10 mt-4 sm:mt-6 gap-4">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-3">
+                    <i class="fa-solid fa-trash-can text-slate-500"></i>
+                    Trash
+                </h1>
+                <p class="text-sm sm:text-base text-slate-500 mt-1">Items are automatically deleted after 30 days.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                <button onclick="app.showDashboard()" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-lg font-medium flex-1 sm:flex-none justify-center flex items-center gap-2 transition-colors shadow-sm">
+                    <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+                </button>
+            </div>
+        </header>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div id="trash-empty-state" class="p-12 text-center text-slate-500 flex flex-col items-center hidden">
+                <i class="fa-solid fa-wind text-5xl text-slate-300 mb-4"></i>
+                <p class="text-lg">Trash is empty.</p>
+            </div>
+
+            <ul id="trash-list" class="divide-y divide-slate-100">
+                <!-- Trashed Reports injected via JS -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- Editor View -->
+    <div id="editor-view" class="max-w-5xl mx-auto p-3 sm:p-6 hidden print:p-0 print:max-w-none print:block">
+        
+        <!-- Top Action Bar -->
+        <div class="no-print flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-slate-200 sticky top-0 z-50 gap-3">
+            <div class="flex justify-between w-full sm:w-auto items-center">
+                <button onclick="app.showDashboard()" class="text-slate-600 hover:text-slate-900 flex items-center gap-2 font-medium transition-colors text-sm sm:text-base">
+                    <i class="fa-solid fa-arrow-left"></i> Back
+                </button>
+                <span id="save-status-mobile" class="text-xs text-slate-400 sm:hidden">Auto-saving...</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                <span id="save-status" class="hidden sm:inline text-sm text-slate-400 mr-2">Draft auto-saved</span>
+                <button onclick="app.refreshReport()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 p-2 sm:px-4 sm:py-2 rounded-lg font-medium flex items-center justify-center transition-colors" title="Clear form">
+                    <i class="fa-solid fa-trash-can text-slate-500"></i><span class="hidden sm:inline ml-2">Clear</span>
+                </button>
+                <button onclick="app.togglePreview()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-medium flex-1 sm:flex-none flex items-center justify-center gap-2 transition-colors text-sm sm:text-base">
+                    <i class="fa-solid fa-eye"></i> Preview
+                </button>
+                <button onclick="window.print()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-medium w-full sm:w-auto flex items-center justify-center gap-2 transition-colors text-sm sm:text-base">
+                    <i class="fa-solid fa-file-pdf"></i> Export PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Report Header -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-8 mb-6 print-shadow-none print-border print:p-4 print:mb-2">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-6 gap-4 print:mb-2 print:pb-2">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-bold text-slate-900 print:text-lg">FSSAI Catering Checklist</h2>
+                    <p class="text-sm text-slate-500 print:text-xs">Radisson Blu Plaza Hotel, Mysore</p>
+                </div>
+                <div class="w-full sm:w-auto text-center bg-indigo-50 rounded-xl p-3 border border-indigo-100 min-w-[160px] print:p-1">
+                    <div class="text-xs text-indigo-500 font-semibold uppercase tracking-wider mb-1 print:text-[10px]">Compliance Grade</div>
+                    <div id="score-grade" class="text-2xl font-bold text-indigo-600 print:text-lg">--</div>
+                    <div id="score-details" class="text-xs text-indigo-400 mt-1 print:text-[10px]">Score: 0/108</div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-2 print:gap-2 print:mb-0">
+                <div class="col-span-2">
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">FBO Name</label>
+                    <input type="text" id="meta-fboName" value="Radisson Blu Plaza Hotel (A Unit of DM South India Hospitality Pvt. Ltd.)" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-indigo-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('fboName', this.value)">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">License No.</label>
+                    <input type="text" id="meta-license" value="10014043001046" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-indigo-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('license', this.value)">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Auditor Name</label>
+                    <input type="text" id="meta-auditor" placeholder="Auditor Name" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-indigo-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('auditor', this.value)">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">FBO Representative</label>
+                    <input type="text" id="meta-rep" placeholder="e.g. Chef Amit Kumar" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-indigo-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('rep', this.value)">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Food Safety Officer</label>
+                    <input type="text" id="meta-fso" placeholder="FSO Name" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-indigo-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('fso', this.value)">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Date</label>
+                    <input type="date" id="meta-date" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-indigo-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('date', this.value)">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Time</label>
+                    <input type="time" id="meta-time" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-indigo-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('time', this.value)">
+                </div>
+            </div>
+        </div>
+
+        <!-- Checklist -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden print-shadow-none print-border mb-6">
+            <div id="checklist-container" class="divide-y divide-slate-100">
+                <!-- Items Injected -->
+            </div>
+        </div>
+
+        <!-- Final Observations -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-8 mb-6 print-shadow-none print-border avoid-break print:p-4 print:mb-2">
+            <div class="flex justify-between items-center mb-3 print:mb-1">
+                <label class="block text-lg font-bold text-slate-900 print:text-base">Overall Observations</label>
+                <button onclick="app.triggerGeneralPhotoUpload()" class="no-print bg-slate-100 hover:bg-slate-200 text-slate-700 py-1.5 px-3 rounded text-sm font-medium flex items-center justify-center gap-1.5 transition-colors border border-slate-200">
+                    <i class="fa-solid fa-camera"></i> Overall Evidence
+                </button>
+            </div>
+            <textarea id="meta-observation" rows="5" placeholder="Summarize the audit findings..." class="w-full border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition-all text-base text-slate-800 print:hidden" onchange="app.updateMeta('observation', this.value)" oninput="document.getElementById('print-meta-observation').textContent = this.value"></textarea>
+            
+            <div id="print-meta-observation" class="hidden print:block w-full text-base text-slate-800 whitespace-pre-wrap min-h-[100px] print:text-[10px] print:min-h-[30px] print:leading-tight"></div>
+            
+            <div id="general-photos-container" class="mt-4 flex gap-3 overflow-x-auto pb-2 hide-scrollbar touch-pan-x empty:hidden print:mt-2"></div>
+        </div>
+
+        <!-- Hidden Global Observation Photo Input -->
+        <input type="file" id="general-photo-upload" accept="image/*" capture="environment" multiple class="hidden" onchange="app.handleGeneralPhotoUpload(event)">
+        <!-- Hidden Item-specific Photo Input -->
+        <input type="file" id="item-photo-upload" accept="image/*" capture="environment" multiple class="hidden">
+
+    </div>
+
+    <script>
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag]));
+        }
+
+        /**
+         * FSSAI Checklist Points System:
+         * Weights adjusted to exactly 108 total points based on user logic.
+         */
+        const AUDIT_QUESTIONS = [
+            // Q1-7 (Indices 0-6): Weight 2
+            { cat: "Design & Facilities", text: "Food establishment has an updated FSSAI license and is displayed at a prominent location.", weight: 2 },
+            { cat: "Design & Facilities", text: "The design of food premises provides adequate working space, permit maintenance & cleaning to prevent entry of dirt, dust & pests.", weight: 2 },
+            { cat: "Design & Facilities", text: "The internal structure and fittings are made of non-toxic and impermeable materials.", weight: 2 },
+            { cat: "Design & Facilities", text: "Walls, ceilings & doors are free from flaking paint or plaster, condensation & shedding particles.", weight: 2 },
+            { cat: "Design & Facilities", text: "Floors are non-slippery & sloped appropriately.", weight: 2 },
+            { cat: "Design & Facilities", text: "Windows are kept closed & fitted with insect proof screen when opening to an external environment.", weight: 2 },
+            { cat: "Design & Facilities", text: "Doors are smooth & non-absorbent. Suitable precautions have been taken to prevent entry of pests.", weight: 2 },
+            
+            // Q8 (Index 7): Weight 4
+            { cat: "Design & Facilities", text: "Potable water (meeting standards of IS 10500) is used as an ingredient or in contact with food. Records maintained.", weight: 4 },
+            
+            // Q9-21 (Indices 8-20): Weight 2
+            { cat: "Design & Facilities", text: "Equipment and containers are made of non-toxic, impervious, and non-reactive material. Resistant to corrosion.", weight: 2 },
+            { cat: "Design & Facilities", text: "Establishment has adequate facilities for heating, cooling, refrigeration and freezing of food. Monitoring records available.", weight: 2 },
+            { cat: "Design & Facilities", text: "Adequate facilities for storage of food, ingredients, packaging, chemicals. Separated to avoid cross-contamination.", weight: 2 },
+            { cat: "Design & Facilities", text: "Proper lighting and ventilation are provided in all areas.", weight: 2 },
+            { cat: "Design & Facilities", text: "Adequate drainage and waste disposal systems are provided. Covered bins used.", weight: 2 },
+            { cat: "Design & Facilities", text: "Adequate facilities for personal hygiene including washbasins, soap, and hand drying means.", weight: 2 },
+            { cat: "Control of Operation", text: "Raw materials are procured from reliable sources with FSSAI license. Inspection records available.", weight: 2 },
+            { cat: "Control of Operation", text: "Food products are stored in appropriate conditions (temperature/humidity). FIFO/FEFO followed.", weight: 2 },
+            { cat: "Control of Operation", text: "Vegetables/Fruits washed with potable water/chlorine before use.", weight: 2 },
+            { cat: "Control of Operation", text: "Thawing of frozen food is done appropriately (refrigerator/running water.", weight: 2 },
+            { cat: "Control of Operation", text: "Cross-contamination prevented by using separate equipment (colour coded) for raw and cooked food.", weight: 2 },
+            { cat: "Control of Operation", text: "Food is cooked thoroughly. Core temperature monitored.", weight: 2 },
+            { cat: "Control of Operation", text: "Reheating of food is done thoroughly. Not done more than once.", weight: 2 },
+
+            // Q22-24 (Indices 21-23): Weight 4
+            { cat: "Control of Operation", text: "Chilling of cooked food is done rapidly. Kept below 5°C.", weight: 4 },
+            { cat: "Control of Operation", text: "Hold food at correct temperature (Hot >60°C, Cold <5°C.", weight: 4 },
+            { cat: "Maintenance & Sanitation", text: "Premises are kept clean and free from accumulated waste and pests.", weight: 4 },
+
+            // Q25 (Index 24): Weight 2
+            { cat: "Maintenance & Sanitation", text: "Cleaning and sanitation program is in place. Monitoring records maintained.", weight: 2 },
+
+            // Q26-27 (Indices 25-26): Weight 4
+            { cat: "Maintenance & Sanitation", text: "Preventive maintenance of equipment is done. Records available.", weight: 4 },
+            { cat: "Maintenance & Sanitation", text: "Pest control program is implemented by a professional agency. Sighting records available.", weight: 4 },
+
+            // Q28 (Index 27): Weight 2
+            { cat: "Maintenance & Sanitation", text: "No evidence of pests (droppings, webs, dead insects) in food handling areas.", weight: 2 },
+
+            // Q29 (Index 28): Weight 4
+            { cat: "Maintenance & Sanitation", text: "Chemicals/Pesticides stored securely away from food areas.", weight: 4 },
+
+            // Q30-36 (Indices 29-35): Weight 2
+            { cat: "Personal Hygiene", text: "Food handlers are medically examined annually. Records available.", weight: 2 },
+            { cat: "Personal Hygiene", text: "Vaccination of food handlers against enteric group of diseases is done.", weight: 2 },
+            { cat: "Personal Hygiene", text: "No person suffering from illness or open wounds is involved in food handling.", weight: 2 },
+            { cat: "Personal Hygiene", text: "Food handlers maintain personal cleanliness (clean clothes, trimmed nails).", weight: 2 },
+            { cat: "Personal Hygiene", text: "Food handlers equipped with suitable aprons, gloves, headgear, and shoe covers.", weight: 2 },
+            { cat: "Personal Hygiene", text: "Hand washing protocols followed by handlers.", weight: 2 },
+            { cat: "Documentation", text: "Internal / External audit of the system is done periodically.", weight: 2 },
+
+            // Q37 (Index 36): Weight 4
+            { cat: "Documentation", text: "Food business has an effective consumer complaints redressal mechanism.", weight: 4 },
+
+            // Q38 (Index 37): Weight 2
+            { cat: "Documentation", text: "Food handlers are trained in food safety (FoSTaC). Records available.", weight: 2 },
+
+            // Q39 (Index 38): Weight 4 (Adjusted from 8 to 4 to balance Q47)
+            { cat: "Documentation", text: "Food Safety Management System (FSMS) plan is developed and implemented.", weight: 4 },
+
+            // Q40 (Index 39): Weight 2
+            { cat: "Documentation", text: "Recall procedure is documented and tested.", weight: 2 },
+
+            // Q41 (Index 40): Weight 2
+            { cat: "Personal Hygiene", text: "No person suffering from a disease or illness or with open wounds is involved in handling of food.", weight: 2 },
+
+            // Q42 (Index 41): Weight 4
+            { cat: "Personal Hygiene", text: "Food handlers maintain personal cleanliness (clean clothes, trimmed nails & waterproof bandage etc) and personal behaviour.", weight: 4 },
+
+            // Q43-46 (Indices 42-45): Weight 2
+            { cat: "Maintenance & Sanitation", text: "Mops and cleaning equipment are in good condition and stored separately from food areas.", weight: 2 },
+            { cat: "Personal Hygiene", text: "All staff are trained on handwashing protocols and facilities are readily accessible.", weight: 2 },
+            { cat: "Control of Operation", text: "Management ensures adequate supervision of food handlers to maintain hygiene standards.", weight: 2 },
+            { cat: "Design & Facilities", text: "External areas of the establishment are kept clean and free from garbage or stagnant water.", weight: 2 },
+
+            // Q47 (Index 46): New Question (Updated: C=4, PC=2, NC=0)
+            { cat: "Documentation", text: "Appropriate documentation & records are available and retained for a period of one year or the shelf-life of the product, whichever is more.", weight: 4 }
+        ];
+
+        const app = {
+            reports: [],
+            currentReportId: null,
+            
+            init() {
+                const stored = localStorage.getItem('fssaiAuditLogsRadisson');
+                if (stored) {
+                    try {
+                        this.reports = JSON.parse(stored);
+                    } catch (e) {
+                        console.error("Could not parse stored reports.");
+                    }
+                }
+                
+                if (!Array.isArray(this.reports)) {
+                    this.reports = [];
+                }
+
+                this.cleanUpTrash(); // Ensures 30-day strict cleanup happens on load
+                this.renderDashboard();
+            },
+
+            cleanUpTrash() {
+                const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+                const now = Date.now();
+                let changed = false;
+
+                this.reports = this.reports.filter(report => {
+                    if (report.deletedAt) {
+                        // Check if it's older than 30 days
+                        if (now - report.deletedAt > THIRTY_DAYS) {
+                            changed = true;
+                            return false; // Permanently delete because it is > 30 days
+                        }
+                    }
+                    return true;
+                });
+
+                if (changed) this.saveToLocal();
+            },
+
+            saveToLocal() {
+                localStorage.setItem('fssaiAuditLogsRadisson', JSON.stringify(this.reports));
+                const statusIndicator = document.getElementById('save-status');
+                if(statusIndicator) statusIndicator.textContent = "Draft auto-saved";
+            },
+
+            showDashboard() {
+                document.body.classList.remove('preview-mode');
+                document.getElementById('trash-view').classList.add('hidden');
+                document.getElementById('editor-view').classList.add('hidden');
+                document.getElementById('dashboard-view').classList.remove('hidden');
+                this.currentReportId = null;
+                this.renderDashboard();
+            },
+
+            showTrash() {
+                document.body.classList.remove('preview-mode');
+                document.getElementById('dashboard-view').classList.add('hidden');
+                document.getElementById('editor-view').classList.add('hidden');
+                document.getElementById('trash-view').classList.remove('hidden');
+                this.currentReportId = null;
+                this.renderTrash();
+            },
+
+            showEditor() {
+                document.getElementById('dashboard-view').classList.add('hidden');
+                document.getElementById('trash-view').classList.add('hidden');
+                document.getElementById('editor-view').classList.remove('hidden');
+            },
+
+            togglePreview() {
+                document.body.classList.toggle('preview-mode');
+                window.scrollTo(0, 0);
+            },
+
+            async createNewReport() {
+                const newReport = {
+                    id: Date.now().toString(),
+                    meta: {
+                        date: new Date().toISOString().split('T')[0],
+                        time: '', auditor: '', rep: 'Chef Amit Kumar', fso: '-', 
+                        fboName: 'Radisson Blu Plaza Hotel (A Unit of DM South India Hospitality Pvt. Ltd.)',
+                        license: '10014043001046', observation: ''
+                    },
+                    generalPhotos: [],
+                    items: {} 
+                };
+                
+                AUDIT_QUESTIONS.forEach((q, idx) => {
+                    newReport.items[idx] = { status: null, remarks: '', photos: [] };
+                });
+
+                this.reports.unshift(newReport);
+                this.currentReportId = newReport.id;
+                this.saveToLocal();
+                this.renderEditor();
+                this.showEditor();
+            },
+
+            openReport(id) {
+                this.currentReportId = id;
+                this.renderEditor();
+                this.showEditor();
+            },
+
+            deleteReport(id, event) {
+                event.stopPropagation();
+                if(confirm("Move this FSSAI report to the trash?")) {
+                    const report = this.reports.find(r => r.id === id);
+                    if (report) {
+                        report.deletedAt = Date.now();
+                        this.saveToLocal();
+                        this.renderDashboard();
+                    }
+                }
+            },
+
+            restoreReport(id, event) {
+                event.stopPropagation();
+                const report = this.reports.find(r => r.id === id);
+                if (report) {
+                    delete report.deletedAt;
+                    this.saveToLocal();
+                    this.renderTrash();
+                }
+            },
+
+            getCurrentReport() {
+                return this.reports.find(r => r.id === this.currentReportId);
+            },
+
+            refreshReport() {
+                if(confirm("Clear this report?")) {
+                    const report = this.getCurrentReport();
+                    if(report) {
+                        report.meta = {
+                            date: new Date().toISOString().split('T')[0],
+                            time: '', auditor: '', rep: '', fso: '', observation: '',
+                            fboName: 'Radisson Blu Plaza Hotel', license: ''
+                        };
+                        report.generalPhotos = [];
+                        AUDIT_QUESTIONS.forEach((q, idx) => {
+                            report.items[idx] = { status: null, remarks: '', photos: [] };
+                        });
+                        this.saveToLocal();
+                        this.renderEditor();
+                    }
+                }
+            },
+
+            calculateScore(report) {
+                let sc = 0;
+                let max = 0;
+                let hasCriticalFailure = false;
+
+                AUDIT_QUESTIONS.forEach((q, idx) => {
+                    const item = report.items[idx];
+                    const weight = q.weight || 2;
+                    if (item && item.status !== 'na' && item.status !== null) {
+                        max += weight;
+                        if (item.status === 'compliant') sc += weight;
+                        if (item.status === 'partial') sc += (weight / 2);
+                        
+                        // Rule: Failure in any critical weight 4+ item leads to Non-compliance
+                        if (item.status === 'non-compliant' && weight >= 4) {
+                            hasCriticalFailure = true;
+                        }
+                    }
+                });
+
+                const percentage = max === 0 ? 0 : Math.round((sc / max) * 100);
+                
+                let grade = "No grade";
+                if (hasCriticalFailure) {
+                    grade = "No Grade (Critical Failure)";
+                } else {
+                    if (percentage >= 85) grade = "A+ (Exemplar)";
+                    else if (percentage >= 77) grade = "A (Satisfactory)";
+                    else if (percentage >= 65) grade = "B (Needs Improvement)";
+                    else grade = "Non-Compliance";
+                }
+
+                return { sc, max, percentage, grade, hasCriticalFailure };
+            },
+
+            updateScoreUI() {
+                const report = this.getCurrentReport();
+                if (!report) return;
+                const score = this.calculateScore(report);
+                const pctEl = document.getElementById('score-grade');
+                const detEl = document.getElementById('score-details');
+                if (pctEl && detEl) {
+                    pctEl.textContent = score.grade;
+                    detEl.textContent = `Score: ${score.sc}/${score.max} (${score.percentage}%)`;
+                    
+                    if (score.hasCriticalFailure) {
+                        pctEl.className = "text-xl font-bold text-red-700";
+                    } else {
+                        pctEl.className = `text-2xl font-bold ${score.percentage >= 85 ? 'text-green-600' : score.percentage >= 65 ? 'text-amber-500' : 'text-red-600'}`;
+                    }
+                }
+            },
+
+            updateMeta(field, value) {
+                const report = this.getCurrentReport();
+                if (report) {
+                    report.meta[field] = value;
+                    if (field === 'observation') {
+                        document.getElementById('print-meta-observation').textContent = value;
+                    }
+                    this.saveToLocal();
+                }
+            },
+
+            updateItemStatus(index, status) {
+                const report = this.getCurrentReport();
+                if (report) {
+                    report.items[index].status = (report.items[index].status === status) ? null : status;
+                    this.saveToLocal();
+                    this.renderChecklist();
+                    this.updateScoreUI();
+                }
+            },
+
+            updateItemRemarks(index, value) {
+                const report = this.getCurrentReport();
+                if (report) {
+                    report.items[index].remarks = value;
+                    this.saveToLocal();
+                }
+            },
+
+            // Image Utilities
+            compressImage(file, callback) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 450;
+                        const MAX_HEIGHT = 450;
+                        let width = img.width;
+                        let height = img.height;
+                        if (width > height) {
+                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                        } else {
+                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        callback(canvas.toDataURL('image/jpeg', 0.5)); 
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            },
+
+            triggerGeneralPhotoUpload() {
+                document.getElementById('general-photo-upload').click();
+            },
+
+            handleGeneralPhotoUpload(event) {
+                const files = event.target.files;
+                if (!files || files.length === 0) return;
+                const report = this.getCurrentReport();
+                if (!report) return;
+                if (!report.generalPhotos) report.generalPhotos = [];
+                Array.from(files).forEach(file => {
+                    this.compressImage(file, (base64Img) => {
+                        report.generalPhotos.push(base64Img);
+                        this.saveToLocal();
+                        this.renderGeneralPhotos();
+                    });
+                });
+            },
+
+            removeGeneralPhoto(idx) {
+                const report = this.getCurrentReport();
+                if (report && confirm("Remove this overall photo?")) {
+                    report.generalPhotos.splice(idx, 1);
+                    this.saveToLocal();
+                    this.renderGeneralPhotos();
+                }
+            },
+
+            renderGeneralPhotos() {
+                const report = this.getCurrentReport();
+                const container = document.getElementById('general-photos-container');
+                container.innerHTML = report.generalPhotos.map((p, i) => `
+                    <div class="relative group shrink-0 w-28 h-28 rounded-lg border border-slate-200 overflow-hidden">
+                        <img src="${p}" class="w-full h-full object-cover">
+                        <button onclick="app.removeGeneralPhoto(${i})" class="no-print absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <i class="fa-solid fa-xmark text-xs"></i>
+                        </button>
+                    </div>
+                `).join('');
+            },
+
+            triggerItemPhotoUpload(idx) {
+                const input = document.getElementById('item-photo-upload');
+                input.onchange = (e) => this.handleItemPhotoUpload(e, idx);
+                input.click();
+            },
+
+            handleItemPhotoUpload(event, idx) {
+                const files = event.target.files;
+                if (!files || files.length === 0) return;
+                const report = this.getCurrentReport();
+                if (!report) return;
+                if (!report.items[idx].photos) report.items[idx].photos = [];
+                Array.from(files).forEach(file => {
+                    this.compressImage(file, (base64Img) => {
+                        report.items[idx].photos.push(base64Img);
+                        this.saveToLocal();
+                        this.renderChecklist();
+                    });
+                });
+            },
+
+            removeItemPhoto(itemIdx, photoIdx) {
+                const report = this.getCurrentReport();
+                if (report && confirm("Remove this evidence photo?")) {
+                    report.items[itemIdx].photos.splice(photoIdx, 1);
+                    this.saveToLocal();
+                    this.renderChecklist();
+                }
+            },
+
+            renderDashboard() {
+                const list = document.getElementById('report-list');
+                const emptyState = document.getElementById('empty-state');
+                
+                list.innerHTML = '';
+                
+                const activeReports = this.reports.filter(r => !r.deletedAt);
+
+                if (activeReports.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    list.classList.add('hidden');
+                    return;
+                }
+                
+                emptyState.classList.add('hidden');
+                list.classList.remove('hidden');
+
+                activeReports.forEach(report => {
+                    const score = this.calculateScore(report);
+                    const colorClass = score.hasCriticalFailure ? 'text-red-700 bg-red-100' : (score.percentage >= 85 ? 'text-green-700 bg-green-100' : score.percentage >= 65 ? 'text-amber-700 bg-amber-100' : 'text-red-700 bg-red-100');
+                    
+                    const li = document.createElement('li');
+                    li.className = "p-4 hover:bg-slate-50 cursor-pointer flex items-center justify-between group transition-colors";
+                    li.onclick = () => this.openReport(report.id);
+                    
+                    li.innerHTML = `
+                        <div class="flex items-center gap-4">
+                            <div class="bg-indigo-100 p-3 rounded-lg text-indigo-600"><i class="fa-solid fa-utensils text-xl"></i></div>
+                            <div>
+                                <h3 class="font-semibold text-slate-900 text-lg">FSSAI Audit - ${escapeHTML(report.meta.date)}</h3>
+                                <div class="flex items-center gap-3 text-sm text-slate-500 mt-1">
+                                    <span class="px-2 py-0.5 rounded font-bold ${colorClass}">${score.grade}</span>
+                                    <span>Auditor: ${escapeHTML(report.meta.auditor || '---')}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="app.deleteReport('${report.id}', event)" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100" title="Move to Trash">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    `;
+                    list.appendChild(li);
+                });
+            },
+
+            renderTrash() {
+                const list = document.getElementById('trash-list');
+                const emptyState = document.getElementById('trash-empty-state');
+                
+                list.innerHTML = '';
+                
+                const trashedReports = this.reports.filter(r => r.deletedAt);
+
+                if (trashedReports.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    list.classList.add('hidden');
+                    return;
+                }
+                
+                emptyState.classList.add('hidden');
+                list.classList.remove('hidden');
+
+                const now = Date.now();
+                const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+
+                trashedReports.forEach(report => {
+                    const date = escapeHTML(report.meta.date) || "No Date";
+                    const fboName = escapeHTML(report.meta.fboName) || "Unknown FBO";
+                    
+                    const timeInTrash = now - report.deletedAt;
+                    const daysLeft = Math.ceil((THIRTY_DAYS - timeInTrash) / (1000 * 60 * 60 * 24));
+                    const daysLeftText = daysLeft > 1 ? `${daysLeft} days left` : (daysLeft === 1 ? `1 day left` : `Deleting today`);
+
+                    const li = document.createElement('li');
+                    li.className = "p-4 hover:bg-slate-50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between group gap-4";
+                    
+                    li.innerHTML = `
+                        <div class="flex items-center gap-4">
+                            <div class="bg-slate-100 p-3 rounded-lg text-slate-400">
+                                <i class="fa-solid fa-file-excel text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-slate-500 text-lg line-through">
+                                    FSSAI Audit - ${date}
+                                </h3>
+                                <div class="flex items-center gap-3 text-sm text-slate-400 mt-1">
+                                    <span><i class="fa-regular fa-building mr-1"></i> ${fboName}</span>
+                                    <span>•</span>
+                                    <span class="text-orange-500 font-medium"><i class="fa-solid fa-clock mr-1"></i> ${daysLeftText}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="app.restoreReport('${report.id}', event)" class="px-3 py-1.5 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors font-medium flex items-center gap-2" title="Restore Report">
+                                <i class="fa-solid fa-arrow-rotate-left"></i> Restore
+                            </button>
+                        </div>
+                    `;
+                    list.appendChild(li);
+                });
+            },
+
+            renderEditor() {
+                const report = this.getCurrentReport();
+                if (!report) return;
+                document.getElementById('meta-date').value = report.meta.date || '';
+                document.getElementById('meta-time').value = report.meta.time || '';
+                document.getElementById('meta-auditor').value = report.meta.auditor || '';
+                document.getElementById('meta-rep').value = report.meta.rep || '';
+                document.getElementById('meta-fso').value = report.meta.fso || '';
+                document.getElementById('meta-fboName').value = report.meta.fboName || '';
+                document.getElementById('meta-license').value = report.meta.license || '';
+                document.getElementById('meta-observation').value = report.meta.observation || '';
+                document.getElementById('print-meta-observation').textContent = report.meta.observation || '';
+                this.renderChecklist();
+                this.renderGeneralPhotos();
+                this.updateScoreUI();
+            },
+
+            renderChecklist() {
+                const report = this.getCurrentReport();
+                const container = document.getElementById('checklist-container');
+                container.innerHTML = '';
+                let lastCat = "";
+
+                AUDIT_QUESTIONS.forEach((q, index) => {
+                    const itemData = report.items[index] || { status: null, remarks: '', photos: [] };
+                    const isC = itemData.status === 'compliant';
+                    const isPC = itemData.status === 'partial';
+                    const isNC = itemData.status === 'non-compliant';
+                    const isNA = itemData.status === 'na';
+
+                    if (q.cat !== lastCat) {
+                        const catHeader = document.createElement('div');
+                        catHeader.className = "bg-slate-100 px-6 py-2 font-bold text-xs uppercase text-slate-500 tracking-wider sticky top-0 z-10 print:static";
+                        catHeader.textContent = q.cat;
+                        container.appendChild(catHeader);
+                        lastCat = q.cat;
+                    }
+
+                    const row = document.createElement('div');
+                    row.className = "p-4 sm:p-6 hover:bg-slate-50/50 transition-colors avoid-break border-b border-slate-100 last:border-0 print:p-1.5 print:py-1";
+
+                    const photosHtml = (itemData.photos || []).map((p, pi) => `
+                        <div class="relative group shrink-0 w-20 h-20 rounded border border-slate-200 overflow-hidden print:w-16 print:h-16">
+                            <img src="${p}" class="w-full h-full object-cover">
+                            <button onclick="app.removeItemPhoto(${index}, ${pi})" class="no-print absolute top-0 right-0 bg-red-500 text-white w-5 h-5 rounded-bl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <i class="fa-solid fa-xmark text-[10px]"></i>
+                            </button>
+                        </div>
+                    `).join('');
+
+                    row.innerHTML = `
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-start print:gap-1">
+                            <div class="md:col-span-6 pr-0 md:pr-4">
+                                <div class="flex items-start">
+                                    <span class="text-slate-400 text-sm font-bold mr-2 mt-1 print:text-[10px] print:mt-0">${index + 1}.</span>
+                                    <div class="flex-1">
+                                        <span class="text-slate-800 font-medium print:text-[10px] print:leading-tight">${escapeHTML(q.text)} ${q.weight >= 4 ? '<span class="text-red-500 ml-1 font-bold">*</span>' : ''}</span>
+                                        <div class="mt-3 flex flex-wrap gap-2 empty:hidden print:mt-1">
+                                            ${photosHtml}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="hidden print:block mt-1 font-bold print:text-[10px]">
+                                    Status: ${isC ? 'Compliance' : isPC ? 'Partial' : isNC ? 'Non-Compliance' : isNA ? 'N/A' : 'Not Checked'}
+                                </div>
+                            </div>
+
+                            <div class="md:col-span-3 flex gap-1 no-print items-center">
+                                <button onclick="app.updateItemStatus(${index}, 'compliant')" 
+                                    class="status-btn flex-1 py-2 border border-slate-200 rounded-md text-[10px] font-bold transition-colors ${isC ? 'selected-c' : 'text-emerald-600 hover:bg-emerald-50'}">
+                                    C
+                                </button>
+                                <button onclick="app.updateItemStatus(${index}, 'partial')" 
+                                    class="status-btn flex-1 py-2 border border-slate-200 rounded-md text-[10px] font-bold transition-colors ${isPC ? 'selected-pc' : 'text-amber-600 hover:bg-amber-50'}">
+                                    PC
+                                </button>
+                                <button onclick="app.updateItemStatus(${index}, 'non-compliant')" 
+                                    class="status-btn flex-1 py-2 border border-slate-200 rounded-md text-[10px] font-bold transition-colors ${isNC ? 'selected-nc' : 'text-red-600 hover:bg-red-50'}">
+                                    NC
+                                </button>
+                                <button onclick="app.updateItemStatus(${index}, 'na')" 
+                                    class="status-btn flex-1 py-2 border border-slate-200 rounded-md text-[10px] font-bold transition-colors ${isNA ? 'selected-na' : 'text-slate-500 hover:bg-slate-50'}">
+                                    NA
+                                </button>
+                                <button onclick="app.triggerItemPhotoUpload(${index})" class="p-2.5 rounded-md border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors" title="Evidence">
+                                    <i class="fa-solid fa-camera"></i>
+                                </button>
+                            </div>
+
+                            <div class="md:col-span-3 flex flex-col gap-2">
+                                <textarea rows="1" 
+                                    onchange="app.updateItemRemarks(${index}, this.value)"
+                                    placeholder="Remarks..." 
+                                    class="w-full text-xs p-2 border border-slate-200 rounded-md outline-none print:hidden resize-none">${escapeHTML(itemData.remarks)}</textarea>
+                                <div class="hidden print:block whitespace-pre-wrap print:text-[10px] print:leading-tight print:pt-0.5">${escapeHTML(itemData.remarks || '')}</div>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(row);
+                });
+            }
+        };
+
+        window.onload = () => app.init();
+    </script>
+</body>
+</html>
