@@ -213,7 +213,7 @@
             "[Back of the House] Indoor parking lot",
             "[Back of the House] Smoking Area",
             "[Back of the House] Basement Parking Area",
-            "[Back of the House] Dock Level", // Moved to come next to Basement Parking Area
+            "[Back of the House] Dock Level", 
             "[Back of the House] Drivers Restroom",
             "[Floors] Floor Cleanliness & Pantries (IRD Trays)",
             "[Room Checks] Room Thorough Check 1",
@@ -247,10 +247,15 @@
                 const sizeMB = (new Blob([JSON.stringify(report)]).size / (1024 * 1024)).toFixed(2);
                 const badge = document.getElementById('report-size-badge');
                 if (badge) {
-                    badge.textContent = `Attachment Size Est: ${sizeMB} MB`;
-                    badge.className = sizeMB > 9 ? "text-[10px] font-black px-2 py-0.5 rounded-md bg-red-100 text-red-600 border border-red-200 uppercase" : 
-                                     sizeMB > 7 ? "text-[10px] font-black px-2 py-0.5 rounded-md bg-amber-100 text-amber-600 border border-amber-200 uppercase" : 
-                                     "text-[10px] font-black px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 border border-slate-200 uppercase";
+                    badge.textContent = `Report Size Est: ${sizeMB} MB (PDF Limit: 10 MB)`;
+                    // Warning thresholds updated for 10MB limit
+                    if (sizeMB > 9.0) {
+                        badge.className = "text-[10px] font-black px-2 py-0.5 rounded-md bg-red-100 text-red-600 border border-red-200 uppercase";
+                    } else if (sizeMB > 7.0) {
+                        badge.className = "text-[10px] font-black px-2 py-0.5 rounded-md bg-amber-100 text-amber-600 border border-amber-200 uppercase";
+                    } else {
+                        badge.className = "text-[10px] font-black px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 border border-slate-200 uppercase";
+                    }
                 }
             },
 
@@ -399,13 +404,15 @@
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const MAX_SIZE = 800;
+                        // Increased MAX_SIZE for better clarity while remaining efficient
+                        const MAX_SIZE = 1200; 
                         let w = img.width, h = img.height;
                         if (w > h) { if (w > MAX_SIZE) { h *= MAX_SIZE / w; w = MAX_SIZE; } }
                         else { if (h > MAX_SIZE) { w *= MAX_SIZE / h; h = MAX_SIZE; } }
                         canvas.width = w; canvas.height = h;
                         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                        callback(canvas.toDataURL('image/jpeg', 0.6));
+                        // Quality set to 0.7 for high clarity without massive file size bloat
+                        callback(canvas.toDataURL('image/jpeg', 0.7)); 
                     };
                     img.src = e.target.result;
                 };
