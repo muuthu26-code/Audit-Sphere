@@ -512,15 +512,16 @@
                 }
             },
 
-            // Image Utilities
+            // Image Utilities - Optimised for Clarity and PDF size
             compressImage(file, callback) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const img = new Image();
                     img.onload = function() {
                         const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 450;
-                        const MAX_HEIGHT = 450;
+                        // Threshold 800px ensures good detail for audit evidence
+                        const MAX_WIDTH = 800;
+                        const MAX_HEIGHT = 800;
                         let width = img.width;
                         let height = img.height;
                         if (width > height) {
@@ -531,8 +532,14 @@
                         canvas.width = width;
                         canvas.height = height;
                         const ctx = canvas.getContext('2d');
+                        
+                        // High quality smoothing for clear evidence
+                        ctx.imageSmoothingEnabled = true;
+                        ctx.imageSmoothingQuality = 'high';
                         ctx.drawImage(img, 0, 0, width, height);
-                        callback(canvas.toDataURL('image/jpeg', 0.5)); 
+                        
+                        // Quality 0.7 keeps file size manageable (~180KB) while maintaining clarity
+                        callback(canvas.toDataURL('image/jpeg', 0.7)); 
                     };
                     img.src = e.target.result;
                 };
