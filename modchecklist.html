@@ -243,12 +243,12 @@
             "[Back of House] Smoking Area",
             "[Back of House] Basement Parking Area",
             "[Back of House] Drivers Restroom",
-            "[Floors] IRD trays / Cleanliness",
-            "[Room Checks] Check 2 rooms thoroughly",
-            "[Safety] Incidents (Guests or Staff)",
-            "[Safety] Fire escape routes clear",
-            "[Safety] Kitchen dangerous points",
-            "[Test Calls] Performance Testing"
+            "[Floors] Check for IRD trays / Cleanliness",
+            "[Room Checks] Please check 2 rooms thoroughly",
+            "[Fire Life Safety] Incidents (Guests or Staff)",
+            "[Fire Life Safety] Fire escape routes clear",
+            "[Fire Life Safety] Kitchens / back of house dangerous points",
+            "[Test Calls] Make test calls and indicate comments"
         ]);
 
         const app = {
@@ -264,9 +264,18 @@
             },
 
             saveToLocal() {
-                localStorage.setItem('mod_audit_v7_data', JSON.stringify(this.reports));
-                const s = document.getElementById('save-status');
-                if(s) { s.classList.remove('hidden'); setTimeout(() => s.classList.add('hidden'), 1500); }
+                try {
+                    localStorage.setItem('mod_audit_v7_data', JSON.stringify(this.reports));
+                    const s = document.getElementById('save-status');
+                    if(s) { s.classList.remove('hidden'); setTimeout(() => s.classList.add('hidden'), 1500); }
+                } catch (e) {
+                    console.error("Storage Error", e);
+                    const msg = document.createElement('div');
+                    msg.className = "fixed top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white px-6 py-3 rounded-lg shadow-2xl z-[9999]";
+                    msg.textContent = "Storage Full! Please delete older reports to save this audit.";
+                    document.body.appendChild(msg);
+                    setTimeout(() => msg.remove(), 4000);
+                }
             },
 
             showDashboard() {
@@ -307,6 +316,14 @@
 
             openReport(id) {
                 this.currentReportId = id;
+                const r = this.reports.find(x => x.id === id);
+                if (r) {
+                    AUDIT_QUESTIONS.forEach((q, idx) => {
+                        if (!r.items[idx]) {
+                            r.items[idx] = { status: null, remarks: '', photos: [] };
+                        }
+                    });
+                }
                 this.renderEditor();
                 document.getElementById('dashboard-view').classList.add('hidden');
                 document.getElementById('editor-view').classList.remove('hidden');
@@ -335,26 +352,20 @@
                 if (r) { r.items[idx].remarks = value; this.saveToLocal(); }
             },
 
-            /**
-             * Optimized Compression for PDF Clarity vs Size
-             * - MAX: 1024px (Crisp High Definition)
-             * - Quality: 0.70 (Professional balance for PDF export)
-             */
             compressImage(file, callback) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const MAX = 1024; 
+                        const MAX = 800; 
                         let w = img.width, h = img.height;
                         if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } }
                         else { if (h > MAX) { w *= MAX / h; h = MAX; } }
                         canvas.width = w; canvas.height = h;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, w, h);
-                        // 0.7 quality is the "sweet spot" for text-on-image legibility and small storage footprint
-                        callback(canvas.toDataURL('image/jpeg', 0.7)); 
+                        callback(canvas.toDataURL('image/jpeg', 0.6)); 
                     };
                     img.src = e.target.result;
                 };
@@ -365,6 +376,7 @@
             triggerPhotoUpload(idx) { this.currentIdx = idx; document.getElementById('item-photo-upload').click(); },
             handleItemPhotoUpload(e) {
                 const r = this.reports.find(x => x.id === this.currentReportId);
+                if (!r) return;
                 Array.from(e.target.files).forEach(f => {
                     this.compressImage(f, (b64) => {
                         r.items[this.currentIdx].photos.push(b64);
@@ -375,9 +387,19 @@
                 e.target.value = '';
             },
 
+            removeItemPhoto(itemIdx, photoIdx) {
+                const r = this.reports.find(x => x.id === this.currentReportId);
+                if (r && r.items[itemIdx]) {
+                    r.items[itemIdx].photos.splice(photoIdx, 1);
+                    this.saveToLocal();
+                    this.renderChecklist();
+                }
+            },
+
             triggerGeneralPhotoUpload() { document.getElementById('general-photo-upload').click(); },
             handleGeneralPhotoUpload(e) {
                 const r = this.reports.find(x => x.id === this.currentReportId);
+                if (!r) return;
                 Array.from(e.target.files).forEach(f => {
                     this.compressImage(f, (b64) => {
                         r.generalPhotos.push(b64);
@@ -430,6 +452,7 @@
 
             renderEditor() {
                 const r = this.reports.find(x => x.id === this.currentReportId);
+                if (!r) return;
                 document.getElementById('meta-date').value = r.meta.date;
                 document.getElementById('meta-day').value = r.meta.day;
                 document.getElementById('meta-modName').value = r.meta.modName;
@@ -443,12 +466,15 @@
 
             renderChecklist() {
                 const r = this.reports.find(x => x.id === this.currentReportId);
+                if (!r) return;
                 const container = document.getElementById('checklist-container');
                 container.innerHTML = '';
                 let currentCat = '';
 
                 AUDIT_QUESTIONS.forEach((q, idx) => {
                     const item = r.items[idx];
+                    if (!item) return; 
+                    
                     const cat = q.match(/^\[(.*?)\]/)?.[1] || "Evaluation";
                     const cleanQ = q.replace(/^\[(.*?)\]\s*/, '');
 
@@ -463,20 +489,21 @@
                     const row = document.createElement('div');
                     row.className = "p-4 sm:p-6 flex flex-col md:flex-row gap-5 border-b last:border-0 print:p-2.5 print:gap-1 avoid-break";
                     
-                    const photos = item.photos.length ? `
+                    // Photo feature removed for items 1-33 (0-32), 55 (54), 57 (56), 58 (57), 59 (58), 60 (59)
+                    const showPhotoFeature = idx >= 33 && ![54, 56, 57, 58, 59].includes(idx);
+
+                    const photosHtml = (showPhotoFeature && item.photos.length) ? `
                         <div class="flex flex-wrap gap-2.5 mt-3 print:mt-1.5">
                             ${item.photos.map((p, pIdx) => `
                                 <div class="relative group w-28 h-28 border rounded overflow-hidden shadow-sm print:w-32 print:h-32">
                                     <a href="${p}" target="_blank" onclick="app.openImage(event, this.href)" title="Tap to enlarge" class="block w-full h-full relative">
                                         <img src="${p}" class="w-full h-full object-cover">
-                                        <!-- PDF Interactivity Prompt -->
                                         <div class="hidden print:block absolute bottom-0 left-0 right-0 bg-teal-900/80 text-[7px] text-white text-center py-1 font-bold uppercase tracking-tighter">Tap to view high-res</div>
-                                        <!-- Web Hover Prompt -->
                                         <div class="no-print absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                                             <i class="fa-solid fa-magnifying-glass-plus text-white text-xl"></i>
                                         </div>
                                     </a>
-                                    <button onclick="item.photos.splice(${pIdx},1); app.saveToLocal(); app.renderChecklist();" class="no-print absolute top-0 right-0 bg-red-600 text-white w-5 h-5 flex items-center justify-center text-[10px] font-bold shadow-md">
+                                    <button onclick="app.removeItemPhoto(${idx}, ${pIdx})" class="no-print absolute top-0 right-0 bg-red-600 text-white w-5 h-5 flex items-center justify-center text-[10px] font-bold shadow-md">
                                         <i class="fa-solid fa-x"></i>
                                     </button>
                                 </div>
@@ -491,9 +518,9 @@
                                 <p class="font-bold text-slate-800 text-sm print:text-[11px] leading-relaxed">${cleanQ}</p>
                             </div>
                             <div class="hidden print:block font-bold text-[9px] mt-1 text-teal-700">RESULT: ${item.status ? item.status.toUpperCase() : 'PENDING'}</div>
-                            <textarea onchange="app.updateItemRemarks(${idx}, this.value)" placeholder="Enter findings..." class="w-full text-sm mt-3 p-3 border rounded-lg no-print resize-none bg-slate-50 focus:ring-2 focus:ring-teal-500 outline-none">${item.remarks}</textarea>
+                            <textarea onchange="app.updateItemRemarks(${idx}, this.value)" placeholder="Enter findings..." class="w-full text-sm mt-3 p-3 border rounded-lg no-print resize-none bg-slate-50 focus:ring-2 focus:ring-teal-500 outline-none">${item.remarks || ''}</textarea>
                             <div class="hidden print:block text-[10px] italic mt-1.5 text-slate-600 pl-6">${item.remarks || '(No remarks)'}</div>
-                            ${photos}
+                            ${photosHtml}
                         </div>
                         <div class="flex flex-col gap-2.5 md:w-52 no-print shrink-0">
                             <div class="flex gap-1.5">
@@ -501,9 +528,11 @@
                                 <button onclick="app.updateItemStatus(${idx}, 'non-compliant')" class="status-btn flex-1 py-2.5 text-xs font-bold border rounded-md ${item.status==='non-compliant'?'selected-non-compliant':'bg-white text-slate-600'}">NO</button>
                                 <button onclick="app.updateItemStatus(${idx}, 'na')" class="status-btn flex-1 py-2.5 text-xs font-bold border rounded-md ${item.status==='na'?'selected-na':'bg-white text-slate-600'}">N/A</button>
                             </div>
+                            ${showPhotoFeature ? `
                             <button onclick="app.triggerPhotoUpload(${idx})" class="w-full py-2.5 bg-white border border-slate-200 text-slate-700 text-xs rounded-md font-bold flex items-center justify-center gap-2 hover:bg-slate-50 shadow-sm">
                                 <i class="fa-solid fa-camera"></i> ATTACH PHOTO
                             </button>
+                            ` : ''}
                         </div>
                     `;
                     container.appendChild(row);
