@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>MOD Audit Checklist - Optimized High-Res</title>
+    <title>MOD Audit Checklist - High-Clarity Evidence</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -91,7 +91,7 @@
                     <i class="fa-solid fa-clipboard-check text-teal-600"></i>
                     MOD Audit Checklist
                 </h1>
-                <p class="text-sm sm:text-base text-slate-500 mt-1">High-clarity reporting optimized for PDF storage.</p>
+                <p class="text-sm sm:text-base text-slate-500 mt-1">High-clarity reporting optimized for 10MB attachments.</p>
             </div>
             <div class="flex items-center gap-2 w-full sm:w-auto">
                 <button onclick="window.location.reload()" class="bg-white border text-slate-700 px-4 py-2.5 rounded-lg font-medium flex-1 sm:flex-none justify-center flex items-center gap-2 shadow-sm">
@@ -348,20 +348,26 @@
                 if (r) { r.items[idx].remarks = value; this.saveToLocal(); }
             },
 
+            /**
+             * Optimized Compression for High-Res Evidence
+             * - MAX: 1024px (Crisp HD Clarity)
+             * - Quality: 0.75 (Professional balance for 10MB mail limit)
+             */
             compressImage(file, callback) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const MAX = 800; 
+                        const MAX = 1024; 
                         let w = img.width, h = img.height;
                         if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } }
                         else { if (h > MAX) { w *= MAX / h; h = MAX; } }
                         canvas.width = w; canvas.height = h;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, w, h);
-                        callback(canvas.toDataURL('image/jpeg', 0.6)); 
+                        // 0.75 provides high clarity for zoom while keeping file size small
+                        callback(canvas.toDataURL('image/jpeg', 0.75)); 
                     };
                     img.src = e.target.result;
                 };
@@ -482,7 +488,7 @@
                     const row = document.createElement('div');
                     row.className = "p-4 sm:p-6 flex flex-col md:flex-row gap-5 border-b last:border-0 print:p-2.5 print:gap-1 avoid-break";
                     
-                    // Photo feature removed for items 1-33 (0-32), 55 (54), 57 (56), 58 (57), 59 (58), 60 (59)
+                    // Logic to remove photo evidence tabs for specific audit points as per previous requests
                     const showPhotoFeature = idx >= 33 && ![54, 56, 57, 58, 59].includes(idx);
 
                     const photosHtml = (showPhotoFeature && item.photos.length) ? `
