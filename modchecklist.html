@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>MOD Audit Checklist - High Res Evidence</title>
+    <title>MOD Audit Checklist - Optimized High-Res</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -31,8 +31,8 @@
             .avoid-break { page-break-inside: avoid; }
             
             /* PDF Specific Image Handling */
-            .print\:w-24 { width: 6rem !important; }
-            .print\:h-24 { height: 6rem !important; }
+            .print\:w-32 { width: 8rem !important; }
+            .print\:h-32 { height: 8rem !important; }
             
             input, textarea { 
                 border: none !important; 
@@ -42,8 +42,8 @@
             }
             * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
             
-            /* Make links look like normal text but remain clickable in digital PDF */
-            a { text-decoration: none !important; color: inherit !important; }
+            /* digital PDF links */
+            a { text-decoration: none !important; color: inherit !important; display: block; }
         }
         
         body.preview-mode { background-color: white !important; color: black !important; }
@@ -54,7 +54,7 @@
         .status-btn.selected-non-compliant { background-color: #ef4444; color: white; border-color: #ef4444; }
         .status-btn.selected-na { background-color: #64748b; color: white; border-color: #64748b; }
 
-        /* Image Zoom Modal (Web View Only) */
+        /* Web View Modal */
         #image-modal {
             display: none;
             position: fixed;
@@ -75,14 +75,14 @@
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
 
-    <!-- Image Modal for Web UI -->
+    <!-- Image Modal for Browser UI -->
     <div id="image-modal" onclick="this.style.display='none'">
         <img id="modal-img" src="" alt="Full size evidence">
-        <div class="absolute bottom-6 text-white bg-black/50 px-4 py-2 rounded-full text-sm">Tap anywhere to close</div>
+        <div class="absolute bottom-6 text-white bg-black/60 px-5 py-2 rounded-full text-sm font-medium">Tap anywhere to close</div>
     </div>
 
-    <!-- Exit Preview Floating Button -->
-    <button id="exit-preview-btn" onclick="app.togglePreview()" class="fixed bottom-8 right-8 bg-slate-800 hover:bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl font-bold z-50 transition-transform hover:scale-105 hidden items-center gap-2">
+    <!-- Exit Preview Button -->
+    <button id="exit-preview-btn" onclick="app.togglePreview()" class="fixed bottom-8 right-8 bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl font-bold z-50 transition-transform hover:scale-105 hidden items-center gap-2">
         <i class="fa-solid fa-eye-slash"></i> Exit Preview
     </button>
 
@@ -91,28 +91,28 @@
         <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-10 mt-4 sm:mt-6 gap-4">
             <div>
                 <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-3">
-                    <i class="fa-solid fa-clipboard-user text-teal-600"></i>
+                    <i class="fa-solid fa-clipboard-check text-teal-600"></i>
                     MOD Audit Checklist
                 </h1>
-                <p class="text-sm sm:text-base text-slate-500 mt-1">File and export high-resolution Manager On Duty audits.</p>
+                <p class="text-sm sm:text-base text-slate-500 mt-1">High-clarity reporting optimized for PDF storage.</p>
             </div>
-            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                <button onclick="window.location.reload()" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-lg font-medium flex-1 sm:flex-none justify-center flex items-center gap-2 transition-colors shadow-sm">
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <button onclick="window.location.reload()" class="bg-white border text-slate-700 px-4 py-2.5 rounded-lg font-medium flex-1 sm:flex-none justify-center flex items-center gap-2 shadow-sm">
                     <i class="fa-solid fa-arrows-rotate"></i> Refresh
                 </button>
-                <button onclick="app.createNewReport()" class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-lg font-medium flex-1 sm:flex-none justify-center flex items-center gap-2 transition-colors shadow-sm">
-                    <i class="fa-solid fa-plus"></i> New MOD Audit
+                <button onclick="app.createNewReport()" class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-lg font-medium flex-1 sm:flex-none justify-center flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-plus"></i> New Audit
                 </button>
             </div>
         </header>
 
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="p-6 border-b border-slate-200 bg-slate-50/50">
-                <h2 class="text-lg font-semibold text-slate-800">Recent Reports</h2>
+            <div class="p-6 border-b bg-slate-50/50">
+                <h2 class="text-lg font-semibold text-slate-800">Recent Audit Logs</h2>
             </div>
             <div id="empty-state" class="p-12 text-center text-slate-500 flex flex-col items-center hidden">
-                <i class="fa-solid fa-shield-halved text-5xl text-slate-300 mb-4"></i>
-                <p class="text-lg">No audit reports filed yet.</p>
+                <i class="fa-solid fa-folder-open text-5xl text-slate-300 mb-4"></i>
+                <p class="text-lg">No audit reports found.</p>
             </div>
             <ul id="report-list" class="divide-y divide-slate-100"></ul>
         </div>
@@ -124,61 +124,61 @@
         <!-- Toolbar -->
         <div class="no-print flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-slate-200 sticky top-0 z-50 gap-3">
             <button onclick="app.showDashboard()" class="text-slate-600 hover:text-slate-900 flex items-center gap-2 font-medium">
-                <i class="fa-solid fa-arrow-left"></i> Back
+                <i class="fa-solid fa-arrow-left"></i> Exit Editor
             </button>
             <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                <span id="save-status" class="hidden sm:inline text-sm text-slate-400 mr-2">Auto-saving...</span>
+                <span id="save-status" class="hidden sm:inline text-xs font-bold text-teal-600 uppercase tracking-widest mr-2">Auto-saved</span>
                 <button onclick="app.togglePreview()" class="bg-teal-50 hover:bg-teal-100 text-teal-700 px-4 py-2 rounded-lg font-medium flex items-center gap-2">
                     <i class="fa-solid fa-eye"></i> Preview
                 </button>
                 <button onclick="window.print()" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2">
-                    <i class="fa-solid fa-file-pdf"></i> Export PDF
+                    <i class="fa-solid fa-file-pdf"></i> Save PDF
                 </button>
             </div>
         </div>
 
-        <!-- Header Information -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-8 mb-6 print:p-2 print:mb-1">
-            <h2 class="text-xl sm:text-2xl font-bold text-slate-900 print:text-base mb-4 border-b pb-2">MOD Audit Report</h2>
-            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 print:gap-1">
+        <!-- Meta Header -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-8 mb-6 print:p-3 print:mb-2">
+            <h2 class="text-xl sm:text-2xl font-bold text-slate-900 print:text-base mb-4 border-b pb-2">MOD Audit Checklist</h2>
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 print:gap-2">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1 print:text-[8px]">Date</label>
-                    <input type="date" id="meta-date" class="w-full border-b py-1 outline-none font-medium print:text-[10px]" onchange="app.updateMeta('date', this.value)">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Date</label>
+                    <input type="date" id="meta-date" class="w-full border-b py-1 outline-none font-medium print:text-[11px]" onchange="app.updateMeta('date', this.value)">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1 print:text-[8px]">Day</label>
-                    <input type="text" id="meta-day" placeholder="Monday" class="w-full border-b py-1 outline-none font-medium print:text-[10px]" onchange="app.updateMeta('day', this.value)">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Day</label>
+                    <input type="text" id="meta-day" placeholder="Monday" class="w-full border-b py-1 outline-none font-medium print:text-[11px]" onchange="app.updateMeta('day', this.value)">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1 print:text-[8px]">MOD Name</label>
-                    <input type="text" id="meta-modName" placeholder="Name" class="w-full border-b py-1 outline-none font-medium print:text-[10px]" onchange="app.updateMeta('modName', this.value)">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">MOD Name</label>
+                    <input type="text" id="meta-modName" placeholder="Name" class="w-full border-b py-1 outline-none font-medium print:text-[11px]" onchange="app.updateMeta('modName', this.value)">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1 print:text-[8px]">Time In</label>
-                    <input type="time" id="meta-timeIn" class="w-full border-b py-1 outline-none font-medium print:text-[10px]" onchange="app.updateMeta('timeIn', this.value)">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Time In</label>
+                    <input type="time" id="meta-timeIn" class="w-full border-b py-1 outline-none font-medium print:text-[11px]" onchange="app.updateMeta('timeIn', this.value)">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1 print:text-[8px]">Time Out</label>
-                    <input type="time" id="meta-timeOut" class="w-full border-b py-1 outline-none font-medium print:text-[10px]" onchange="app.updateMeta('timeOut', this.value)">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Time Out</label>
+                    <input type="time" id="meta-timeOut" class="w-full border-b py-1 outline-none font-medium print:text-[11px]" onchange="app.updateMeta('timeOut', this.value)">
                 </div>
             </div>
         </div>
 
-        <!-- Questions List -->
-        <div id="checklist-container" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden divide-y print:mb-2"></div>
+        <!-- Checklist -->
+        <div id="checklist-container" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden divide-y print:mb-4"></div>
 
-        <!-- Summary -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-8 mt-6 print:p-2 print:mt-1 avoid-break">
+        <!-- General Remarks -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-8 mt-6 print:p-3 print:mt-2 avoid-break">
             <div class="flex justify-between items-center mb-4">
-                <label class="block text-lg font-bold text-slate-900 print:text-base">Overall Observation</label>
-                <button onclick="app.triggerGeneralPhotoUpload()" class="no-print bg-slate-100 px-3 py-1.5 rounded text-sm font-medium border">
-                    <i class="fa-solid fa-camera mr-1"></i> Add Photos
+                <label class="block text-lg font-bold text-slate-900 print:text-base">Manager Observations</label>
+                <button onclick="app.triggerGeneralPhotoUpload()" class="no-print bg-slate-100 px-4 py-2 rounded text-sm font-bold border border-slate-200 shadow-sm">
+                    <i class="fa-solid fa-camera mr-2"></i> Add Evidence
                 </button>
             </div>
-            <textarea id="meta-observation" rows="4" class="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-teal-600 print:hidden" onchange="app.updateMeta('observation', this.value)"></textarea>
-            <div id="print-meta-observation" class="hidden print:block whitespace-pre-wrap text-[10px] min-h-[40px]"></div>
+            <textarea id="meta-observation" rows="5" class="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-teal-600 print:hidden text-slate-800" onchange="app.updateMeta('observation', this.value)"></textarea>
+            <div id="print-meta-observation" class="hidden print:block whitespace-pre-wrap text-[11px] leading-relaxed"></div>
             
-            <div id="general-photos-container" class="mt-4 flex gap-3 flex-wrap"></div>
+            <div id="general-photos-container" class="mt-4 flex gap-3 flex-wrap print:mt-2"></div>
         </div>
 
         <input type="file" id="item-photo-upload" accept="image/*" multiple class="hidden" onchange="app.handleItemPhotoUpload(event)">
@@ -189,12 +189,12 @@
         "use strict";
 
         const AUDIT_QUESTIONS = Object.freeze([
-            "[Guest Interaction] Please speak to three (3) guests",
-            "[Staff Interaction] Please speak to three (3) staff members",
+            "[Guest Interaction] Speak to three (3) guests / Name/Room / Feedback",
+            "[Staff Interaction] Speak to three (3) staff members / Different Depts",
             "[General Areas] Main Entrance",
-            "[General Areas] Porch Arrival Standards",
+            "[General Areas] Porch arrival standards",
             "[General Areas] Front Desk",
-            "[General Areas] Check-In Process SOPs",
+            "[General Areas] Check-In process SOP following",
             "[General Areas] Communication Centre",
             "[General Areas] Business Centre",
             "[General Areas] Swimming Pool/Gym",
@@ -209,45 +209,45 @@
             "[General Areas] Lobby Area Restroom",
             "[General Areas] Mezzanine Area Restroom",
             "[General Areas] Arrivals at 22:00",
-            "[General Areas] VIP Expectations",
-            "[Food & Beverage] Spring",
+            "[General Areas] VIP Expected Status",
+            "[Food & Beverage] Spring Restaurant",
             "[Food & Beverage] Spring Patio",
-            "[Food & Beverage] IRD",
+            "[Food & Beverage] IRD Service",
             "[Food & Beverage] Myst",
             "[Food & Beverage] Myst Patio",
             "[Food & Beverage] Mysouth",
-            "[Food & Beverage] Banquets",
-            "[Cover Tally Check] Enter Cover Tally",
-            "[Employee Facilities] Samovar Standards",
-            "[Employee Facilities] Plates/Cutlery Cleanliness",
-            "[Employee Facilities] Table/Chairs Arrangement",
-            "[Employee Facilities] Ladies Drop",
-            "[Back of the House] Locker Rooms",
-            "[Back of the House] Bakery",
-            "[Back of the House] Commissary",
-            "[Back of the House] Grinder Room",
-            "[Back of the House] Walk-In Freezers",
-            "[Back of the House] Main Kitchen Store",
-            "[Back of the House] Main Kitchen",
-            "[Back of the House] D-Bar",
-            "[Back of the House] Mysouth Kitchen Area",
-            "[Back of the House] Myst Kitchen Area",
-            "[Back of the House] Samovar Kitchen Area",
-            "[Back of the House] Service Floor",
-            "[Back of the House] BOH Corridors",
-            "[Back of the House] Dock Level",
-            "[Back of the House] Staff Entrance",
-            "[Back of the House] Garbage Area",
-            "[Back of the House] Stewarding Areas",
-            "[Back of the House] Indoor Parking",
-            "[Back of the House] Smoking Area",
-            "[Back of the House] Basement Parking",
-            "[Back of the House] Drivers Restroom",
-            "[Floors] IRD Trays / Cleanliness",
+            "[Food & Beverage] Banquets (Mehfil & Lawn)",
+            "[Cover Tally] Enter Cover Tally",
+            "[Employee Facilities] Samovar standards",
+            "[Employee Facilities] Plates and cutlery washed - Samovar",
+            "[Employee Facilities] Table and chairs cleaned - Samovar",
+            "[Employee Facilities] Ladies drop",
+            "[Back of House] Locker Rooms",
+            "[Back of House] Bakery",
+            "[Back of House] Commissary",
+            "[Back of House] Grinder Room",
+            "[Back of House] Walk-In Freezers",
+            "[Back of House] Main Kitchen Store",
+            "[Back of House] Main Kitchen",
+            "[Back of House] D-Bar",
+            "[Back of House] Mysouth Kitchen Area",
+            "[Back of House] Myst Kitchen Area",
+            "[Back of House] Samovar Kitchen Area",
+            "[Back of House] Service Floor",
+            "[Back of House] BOH corridors",
+            "[Back of House] Dock Level",
+            "[Back of House] Staff Entrance",
+            "[Back of House] Garbage area",
+            "[Back of House] Stewarding areas",
+            "[Back of House] Indoor parking lot",
+            "[Back of House] Smoking Area",
+            "[Back of House] Basement Parking Area",
+            "[Back of House] Drivers Restroom",
+            "[Floors] IRD trays / Cleanliness",
             "[Room Checks] Check 2 rooms thoroughly",
-            "[Fire Life Safety] Incidents Log",
-            "[Fire Life Safety] Escape Routes Clear",
-            "[Fire Life Safety] Dangerous Points BOH",
+            "[Safety] Incidents (Guests or Staff)",
+            "[Safety] Fire escape routes clear",
+            "[Safety] Kitchen dangerous points",
             "[Test Calls] Performance Testing"
         ]);
 
@@ -257,16 +257,16 @@
             
             init() {
                 try {
-                    const stored = localStorage.getItem('hotelModAuditsV5');
+                    const stored = localStorage.getItem('mod_audit_v7_data');
                     if (stored) this.reports = JSON.parse(stored);
                 } catch (e) { console.error(e); }
                 this.renderDashboard();
             },
 
             saveToLocal() {
-                localStorage.setItem('hotelModAuditsV5', JSON.stringify(this.reports));
+                localStorage.setItem('mod_audit_v7_data', JSON.stringify(this.reports));
                 const s = document.getElementById('save-status');
-                if(s) { s.textContent = "Saved locally"; setTimeout(() => s.textContent = "", 2000); }
+                if(s) { s.classList.remove('hidden'); setTimeout(() => s.classList.add('hidden'), 1500); }
             },
 
             showDashboard() {
@@ -281,10 +281,8 @@
                 window.scrollTo(0, 0);
             },
 
-            // Unified Photo Viewer (Web Interface)
             openImage(e, src) {
-                // Prevent link from opening if we are in the web app
-                if (e) e.preventDefault();
+                if (e && !document.body.classList.contains('preview-mode')) e.preventDefault();
                 const modal = document.getElementById('image-modal');
                 const img = document.getElementById('modal-img');
                 img.src = src;
@@ -337,21 +335,26 @@
                 if (r) { r.items[idx].remarks = value; this.saveToLocal(); }
             },
 
-            // High Fidelity Image Compression
+            /**
+             * Optimized Compression for PDF Clarity vs Size
+             * - MAX: 1024px (Crisp High Definition)
+             * - Quality: 0.70 (Professional balance for PDF export)
+             */
             compressImage(file, callback) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const MAX = 1200; // Crisp resolution for PDF
+                        const MAX = 1024; 
                         let w = img.width, h = img.height;
                         if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } }
                         else { if (h > MAX) { w *= MAX / h; h = MAX; } }
                         canvas.width = w; canvas.height = h;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, w, h);
-                        callback(canvas.toDataURL('image/jpeg', 0.8)); // High-fidelity 80% quality
+                        // 0.7 quality is the "sweet spot" for text-on-image legibility and small storage footprint
+                        callback(canvas.toDataURL('image/jpeg', 0.7)); 
                     };
                     img.src = e.target.result;
                 };
@@ -369,6 +372,7 @@
                         this.renderChecklist();
                     });
                 });
+                e.target.value = '';
             },
 
             triggerGeneralPhotoUpload() { document.getElementById('general-photo-upload').click(); },
@@ -381,17 +385,19 @@
                         this.renderGeneralPhotos();
                     });
                 });
+                e.target.value = '';
             },
 
             renderGeneralPhotos() {
                 const r = this.reports.find(x => x.id === this.currentReportId);
                 const c = document.getElementById('general-photos-container');
                 c.innerHTML = r.generalPhotos.map((p, idx) => `
-                    <div class="relative group w-32 h-32 border rounded overflow-hidden">
-                        <a href="${p}" target="_blank" onclick="app.openImage(event, this.href)" class="block w-full h-full">
+                    <div class="relative group w-32 h-32 border rounded overflow-hidden shadow-sm">
+                        <a href="${p}" target="_blank" onclick="app.openImage(event, this.href)" title="Tap to enlarge" class="block w-full h-full">
                             <img src="${p}" class="w-full h-full object-cover">
+                            <div class="hidden print:block absolute bottom-0 left-0 right-0 bg-black/60 text-[7px] text-white text-center py-0.5 font-bold uppercase tracking-tighter">View Source</div>
                         </a>
-                        <button onclick="r.generalPhotos.splice(${idx},1); app.saveToLocal(); app.renderGeneralPhotos()" class="no-print absolute top-0 right-0 bg-red-500 text-white p-1 text-[10px]">Delete</button>
+                        <button onclick="r.generalPhotos.splice(${idx},1); app.saveToLocal(); app.renderGeneralPhotos()" class="no-print absolute top-0 right-0 bg-red-600 text-white p-1 text-[9px] font-bold shadow-md">DEL</button>
                     </div>
                 `).join('');
             },
@@ -404,9 +410,20 @@
                 empty.classList.add('hidden');
                 this.reports.forEach(r => {
                     const li = document.createElement('li');
-                    li.className = "p-4 hover:bg-slate-50 cursor-pointer flex justify-between items-center";
+                    li.className = "p-5 hover:bg-slate-50 cursor-pointer flex justify-between items-center transition-colors group";
                     li.onclick = () => this.openReport(r.id);
-                    li.innerHTML = `<div><div class="font-bold">${r.meta.modName || 'Unnamed Audit'}</div><div class="text-xs text-slate-500">${r.meta.date}</div></div><i class="fa-solid fa-chevron-right text-slate-300"></i>`;
+                    li.innerHTML = `
+                        <div>
+                            <div class="font-bold text-slate-900">${r.meta.modName || 'Audit Log'}</div>
+                            <div class="text-xs text-slate-500 mt-1"><i class="fa-regular fa-calendar mr-1"></i> ${r.meta.date} ${r.meta.day ? '• '+r.meta.day : ''}</div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <button onclick="event.stopPropagation(); if(confirm('Delete?')){ app.reports = app.reports.filter(x => x.id !== '${r.id}'); app.saveToLocal(); app.renderDashboard(); }" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-600 transition-all p-2">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                            <i class="fa-solid fa-chevron-right text-slate-300"></i>
+                        </div>
+                    `;
                     list.appendChild(li);
                 });
             },
@@ -432,35 +449,35 @@
 
                 AUDIT_QUESTIONS.forEach((q, idx) => {
                     const item = r.items[idx];
-                    const cat = q.match(/^\[(.*?)\]/)?.[1] || "Audit";
+                    const cat = q.match(/^\[(.*?)\]/)?.[1] || "Evaluation";
                     const cleanQ = q.replace(/^\[(.*?)\]\s*/, '');
 
                     if (cat !== currentCat) {
                         const h = document.createElement('div');
-                        h.className = "bg-slate-50 px-4 py-2 font-bold text-teal-800 border-y text-sm print:bg-slate-100 print:text-black";
+                        h.className = "bg-teal-50 px-5 py-2.5 font-bold text-teal-900 border-y text-xs uppercase tracking-wider print:bg-slate-100 print:text-black";
                         h.textContent = cat;
                         container.appendChild(h);
                         currentCat = cat;
                     }
 
                     const row = document.createElement('div');
-                    row.className = "p-4 sm:p-5 flex flex-col md:flex-row gap-4 border-b last:border-0 print:p-2 print:gap-1 avoid-break";
+                    row.className = "p-4 sm:p-6 flex flex-col md:flex-row gap-5 border-b last:border-0 print:p-2.5 print:gap-1 avoid-break";
                     
                     const photos = item.photos.length ? `
-                        <div class="flex flex-wrap gap-2 mt-2">
+                        <div class="flex flex-wrap gap-2.5 mt-3 print:mt-1.5">
                             ${item.photos.map((p, pIdx) => `
-                                <div class="relative group w-24 h-24 border rounded overflow-hidden">
+                                <div class="relative group w-28 h-28 border rounded overflow-hidden shadow-sm print:w-32 print:h-32">
                                     <a href="${p}" target="_blank" onclick="app.openImage(event, this.href)" title="Tap to enlarge" class="block w-full h-full relative">
                                         <img src="${p}" class="w-full h-full object-cover">
-                                        <!-- PDF/Print Tooltip Logic -->
-                                        <div class="hidden print:block absolute bottom-0 left-0 right-0 bg-black/60 text-[6px] text-white text-center py-0.5">Tap to view high-res</div>
-                                        <!-- Web Hover Tooltip -->
+                                        <!-- PDF Interactivity Prompt -->
+                                        <div class="hidden print:block absolute bottom-0 left-0 right-0 bg-teal-900/80 text-[7px] text-white text-center py-1 font-bold uppercase tracking-tighter">Tap to view high-res</div>
+                                        <!-- Web Hover Prompt -->
                                         <div class="no-print absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                                             <i class="fa-solid fa-magnifying-glass-plus text-white text-xl"></i>
                                         </div>
                                     </a>
-                                    <button onclick="item.photos.splice(${pIdx},1); app.saveToLocal(); app.renderChecklist();" class="no-print absolute top-0 right-0 bg-red-500 text-white w-4 h-4 flex items-center justify-center text-[8px] rounded-bl-lg shadow">
-                                        <i class="fa-solid fa-xmark"></i>
+                                    <button onclick="item.photos.splice(${pIdx},1); app.saveToLocal(); app.renderChecklist();" class="no-print absolute top-0 right-0 bg-red-600 text-white w-5 h-5 flex items-center justify-center text-[10px] font-bold shadow-md">
+                                        <i class="fa-solid fa-x"></i>
                                     </button>
                                 </div>
                             `).join('')}
@@ -469,23 +486,23 @@
 
                     row.innerHTML = `
                         <div class="flex-1">
-                            <div class="flex gap-2">
-                                <span class="text-slate-400 font-bold text-sm">${idx + 1}.</span>
-                                <p class="font-medium text-slate-800 text-sm print:text-[10px]">${cleanQ}</p>
+                            <div class="flex gap-3">
+                                <span class="text-slate-400 font-black text-sm">${idx + 1}.</span>
+                                <p class="font-bold text-slate-800 text-sm print:text-[11px] leading-relaxed">${cleanQ}</p>
                             </div>
-                            <div class="hidden print:block font-bold text-[8px] mt-1">Status: ${item.status || 'Not Evaluated'}</div>
-                            <textarea onchange="app.updateItemRemarks(${idx}, this.value)" placeholder="Remarks..." class="w-full text-sm mt-2 p-2 border rounded no-print resize-none bg-slate-50">${item.remarks}</textarea>
-                            <div class="hidden print:block text-[9px] italic mt-1 text-slate-600">${item.remarks}</div>
+                            <div class="hidden print:block font-bold text-[9px] mt-1 text-teal-700">RESULT: ${item.status ? item.status.toUpperCase() : 'PENDING'}</div>
+                            <textarea onchange="app.updateItemRemarks(${idx}, this.value)" placeholder="Enter findings..." class="w-full text-sm mt-3 p-3 border rounded-lg no-print resize-none bg-slate-50 focus:ring-2 focus:ring-teal-500 outline-none">${item.remarks}</textarea>
+                            <div class="hidden print:block text-[10px] italic mt-1.5 text-slate-600 pl-6">${item.remarks || '(No remarks)'}</div>
                             ${photos}
                         </div>
-                        <div class="flex flex-col gap-2 md:w-48 no-print shrink-0">
-                            <div class="flex gap-1">
-                                <button onclick="app.updateItemStatus(${idx}, 'compliant')" class="status-btn flex-1 py-2 text-xs border rounded ${item.status==='compliant'?'selected-compliant':''}">Yes</button>
-                                <button onclick="app.updateItemStatus(${idx}, 'non-compliant')" class="status-btn flex-1 py-2 text-xs border rounded ${item.status==='non-compliant'?'selected-non-compliant':''}">No</button>
-                                <button onclick="app.updateItemStatus(${idx}, 'na')" class="status-btn flex-1 py-2 text-xs border rounded ${item.status==='na'?'selected-na':''}">N/A</button>
+                        <div class="flex flex-col gap-2.5 md:w-52 no-print shrink-0">
+                            <div class="flex gap-1.5">
+                                <button onclick="app.updateItemStatus(${idx}, 'compliant')" class="status-btn flex-1 py-2.5 text-xs font-bold border rounded-md ${item.status==='compliant'?'selected-compliant':'bg-white text-slate-600'}">YES</button>
+                                <button onclick="app.updateItemStatus(${idx}, 'non-compliant')" class="status-btn flex-1 py-2.5 text-xs font-bold border rounded-md ${item.status==='non-compliant'?'selected-non-compliant':'bg-white text-slate-600'}">NO</button>
+                                <button onclick="app.updateItemStatus(${idx}, 'na')" class="status-btn flex-1 py-2.5 text-xs font-bold border rounded-md ${item.status==='na'?'selected-na':'bg-white text-slate-600'}">N/A</button>
                             </div>
-                            <button onclick="app.triggerPhotoUpload(${idx})" class="w-full py-2 bg-teal-50 border text-teal-700 text-xs rounded font-medium flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-camera"></i> Evidence
+                            <button onclick="app.triggerPhotoUpload(${idx})" class="w-full py-2.5 bg-white border border-slate-200 text-slate-700 text-xs rounded-md font-bold flex items-center justify-center gap-2 hover:bg-slate-50 shadow-sm">
+                                <i class="fa-solid fa-camera"></i> ATTACH PHOTO
                             </button>
                         </div>
                     `;
