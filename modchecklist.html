@@ -30,9 +30,9 @@
             .print-border { border: 1px solid #e5e7eb !important; }
             .avoid-break { page-break-inside: avoid; }
             
-            /* PDF Specific Image Handling */
-            .print\:w-32 { width: 8rem !important; }
-            .print\:h-32 { height: 8rem !important; }
+            /* PDF Specific Image Handling - Large enough to zoom in PDF reader */
+            .print\:w-32 { width: 8.5rem !important; }
+            .print\:h-32 { height: 8.5rem !important; }
             
             input, textarea { 
                 border: none !important; 
@@ -41,9 +41,6 @@
                 padding: 0 !important;
             }
             * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
-            
-            /* digital PDF links */
-            a { text-decoration: none !important; color: inherit !important; display: block; }
         }
         
         body.preview-mode { background-color: white !important; color: black !important; }
@@ -290,8 +287,7 @@
                 window.scrollTo(0, 0);
             },
 
-            openImage(e, src) {
-                if (e && !document.body.classList.contains('preview-mode')) e.preventDefault();
+            openImage(src) {
                 const modal = document.getElementById('image-modal');
                 const img = document.getElementById('modal-img');
                 img.src = src;
@@ -415,10 +411,7 @@
                 const c = document.getElementById('general-photos-container');
                 c.innerHTML = r.generalPhotos.map((p, idx) => `
                     <div class="relative group w-32 h-32 border rounded overflow-hidden shadow-sm">
-                        <a href="${p}" target="_blank" onclick="app.openImage(event, this.href)" title="Tap to enlarge" class="block w-full h-full">
-                            <img src="${p}" class="w-full h-full object-cover">
-                            <div class="hidden print:block absolute bottom-0 left-0 right-0 bg-black/60 text-[7px] text-white text-center py-0.5 font-bold uppercase tracking-tighter">View Source</div>
-                        </a>
+                        <img src="${p}" onclick="app.openImage(this.src)" class="w-full h-full object-cover cursor-zoom-in">
                         <button onclick="r.generalPhotos.splice(${idx},1); app.saveToLocal(); app.renderGeneralPhotos()" class="no-print absolute top-0 right-0 bg-red-600 text-white p-1 text-[9px] font-bold shadow-md">DEL</button>
                     </div>
                 `).join('');
@@ -496,13 +489,10 @@
                         <div class="flex flex-wrap gap-2.5 mt-3 print:mt-1.5">
                             ${item.photos.map((p, pIdx) => `
                                 <div class="relative group w-28 h-28 border rounded overflow-hidden shadow-sm print:w-32 print:h-32">
-                                    <a href="${p}" target="_blank" onclick="app.openImage(event, this.href)" title="Tap to enlarge" class="block w-full h-full relative">
-                                        <img src="${p}" class="w-full h-full object-cover">
-                                        <div class="hidden print:block absolute bottom-0 left-0 right-0 bg-teal-900/80 text-[7px] text-white text-center py-1 font-bold uppercase tracking-tighter">Tap to view high-res</div>
-                                        <div class="no-print absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                            <i class="fa-solid fa-magnifying-glass-plus text-white text-xl"></i>
-                                        </div>
-                                    </a>
+                                    <img src="${p}" onclick="app.openImage(this.src)" class="w-full h-full object-cover cursor-zoom-in">
+                                    <div class="no-print absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center pointer-events-none transition-opacity">
+                                        <i class="fa-solid fa-magnifying-glass-plus text-white text-xl"></i>
+                                    </div>
                                     <button onclick="app.removeItemPhoto(${idx}, ${pIdx})" class="no-print absolute top-0 right-0 bg-red-600 text-white w-5 h-5 flex items-center justify-center text-[10px] font-bold shadow-md">
                                         <i class="fa-solid fa-x"></i>
                                     </button>
