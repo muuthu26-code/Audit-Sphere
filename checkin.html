@@ -157,9 +157,12 @@
                     <i class="fa-solid fa-trash-can text-slate-500"></i>
                     Trash
                 </h1>
-                <p class="text-sm sm:text-base text-slate-500 mt-1">Items are automatically deleted after 30 days.</p>
+                <p class="text-sm sm:text-base text-slate-500 mt-1">Reports remain here until restored or permanently cleared.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                <button onclick="app.emptyTrash()" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2.5 rounded-lg font-medium flex-1 sm:flex-none justify-center flex items-center gap-2 transition-colors border border-red-100">
+                    <i class="fa-solid fa-circle-xmark"></i> Empty Trash
+                </button>
                 <button onclick="app.showDashboard()" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-lg font-medium flex-1 sm:flex-none justify-center flex items-center gap-2 transition-colors shadow-sm">
                     <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
                 </button>
@@ -299,7 +302,7 @@
             "[Check-In] Did the team member try upselling of room",
             "[Check-In] Confirm reservation details from the system (stay length, room type, departure date).",
             "[Check-In] Present registration card for review and signature. Ask for billing address.",
-            "[Check-In] Whether the guest's e-mail address is obtained?",
+            "[Check-In] Verify that the email ID is correctly captured and reconfirmed during the check-in process.",
             "[Check-In] Request payment details as per local credit policy",
             "[Check-In] Was B'Fast location & timing explained to the guest?",
             "[Check-In] Was Food & Beverage facilities explained to the guest?",
@@ -331,7 +334,6 @@
                         console.error("Could not parse stored reports.");
                     }
                 }
-                this.cleanUpTrash(); // Delete items older than 30 days
                 this.renderDashboard();
             },
 
@@ -348,25 +350,6 @@
                     if(statusIndicator) statusIndicator.textContent = "Saved locally";
                     if(statusIndicatorMobile) statusIndicatorMobile.textContent = "Saved locally";
                 }, 1000);
-            },
-
-            cleanUpTrash() {
-                const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
-                const now = Date.now();
-                let changed = false;
-
-                this.reports = this.reports.filter(report => {
-                    if (report.deletedAt) {
-                        // Check if it's older than 30 days
-                        if (now - report.deletedAt > THIRTY_DAYS) {
-                            changed = true;
-                            return false; // Permanently delete
-                        }
-                    }
-                    return true;
-                });
-
-                if (changed) this.saveToLocal();
             },
 
             showDashboard() {
@@ -411,11 +394,10 @@
                         supervisor: '',
                         observation: ''
                     },
-                    generalPhotos: [], // Array for general observation photos
-                    items: {} // Will hold { index: { status: 'compliant'|'non-compliant'|'na'|null, remarks: '', photos: [] } }
+                    generalPhotos: [],
+                    items: {}
                 };
                 
-                // Initialize items
                 AUDIT_QUESTIONS.forEach((q, idx) => {
                     newReport.items[idx] = { status: null, remarks: '', photos: [] };
                 });
@@ -450,6 +432,14 @@
                 const report = this.reports.find(r => r.id === id);
                 if (report) {
                     delete report.deletedAt;
+                    this.saveToLocal();
+                    this.renderTrash();
+                }
+            },
+
+            emptyTrash() {
+                if(confirm("Are you sure you want to permanently delete all items in the trash? This action cannot be undone.")) {
+                    this.reports = this.reports.filter(r => !r.deletedAt);
                     this.saveToLocal();
                     this.renderTrash();
                 }
@@ -492,10 +482,9 @@
             updateItemStatus(index, status) {
                 const report = this.getCurrentReport();
                 if (report) {
-                    // Toggle off if clicking the already selected status
                     report.items[index].status = (report.items[index].status === status) ? null : status;
                     this.saveToLocal();
-                    this.renderChecklist(); // Re-render just the checklist part
+                    this.renderChecklist(); 
                 }
             },
 
@@ -512,14 +501,12 @@
                 alert("Draft saved successfully.");
             },
 
-            // --- PHOTO COMPRESSION AND UPLOAD LOGIC ---
             compressImage(file, callback) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const img = new Image();
                     img.onload = function() {
                         const canvas = document.createElement('canvas');
-                        // Aggressive compression for < 3MB PDF size even with many photos
                         const MAX_WIDTH = 400;
                         const MAX_HEIGHT = 400;
                         let width = img.width;
@@ -541,8 +528,6 @@
                         canvas.height = height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
-                        
-                        // Compress to 40% quality JPEG
                         callback(canvas.toDataURL('image/jpeg', 0.4)); 
                     };
                     img.src = e.target.result;
@@ -550,7 +535,6 @@
                 reader.readAsDataURL(file);
             },
 
-            // General Observation Photos
             triggerGeneralPhotoUpload() {
                 document.getElementById('general-photo-upload').value = '';
                 document.getElementById('general-photo-upload').click();
@@ -603,8 +587,6 @@
                     `).join('');
                 }
             },
-
-            // --- RENDERING VIEWS ---
 
             renderDashboard() {
                 const list = document.getElementById('report-list');
@@ -671,16 +653,10 @@
                 emptyState.classList.add('hidden');
                 list.classList.remove('hidden');
 
-                const now = Date.now();
-                const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
-
                 trashedReports.forEach(report => {
                     const guestInfo = report.meta.guestName ? `Guest: ${escapeHTML(report.meta.guestName)}` : "No Guest Name";
                     const date = report.meta.date || "No Date";
-                    
-                    const timeInTrash = now - report.deletedAt;
-                    const daysLeft = Math.ceil((THIRTY_DAYS - timeInTrash) / (1000 * 60 * 60 * 24));
-                    const daysLeftText = daysLeft > 1 ? `${daysLeft} days left` : (daysLeft === 1 ? `1 day left` : `Deleting today`);
+                    const deletedOn = new Date(report.deletedAt).toLocaleDateString();
 
                     const li = document.createElement('li');
                     li.className = "p-4 hover:bg-slate-50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between group gap-4";
@@ -697,7 +673,7 @@
                                 <div class="flex items-center gap-3 text-sm text-slate-400 mt-1">
                                     <span><i class="fa-regular fa-calendar mr-1"></i> ${escapeHTML(date)}</span>
                                     <span>•</span>
-                                    <span class="text-orange-500 font-medium"><i class="fa-solid fa-clock mr-1"></i> ${daysLeftText}</span>
+                                    <span><i class="fa-solid fa-trash-can mr-1"></i> Deleted on: ${deletedOn}</span>
                                 </div>
                             </div>
                         </div>
@@ -715,7 +691,6 @@
                 const report = this.getCurrentReport();
                 if (!report) return;
 
-                // Populate Metadata
                 document.getElementById('meta-date').value = report.meta.date || '';
                 document.getElementById('meta-time').value = report.meta.time || '';
                 document.getElementById('meta-auditorName').value = report.meta.auditorName || '';
@@ -736,7 +711,7 @@
                 const container = document.getElementById('checklist-container');
                 container.innerHTML = '';
                 
-                let currentCategoryRender = ''; // Track category for section headers
+                let currentCategoryRender = '';
 
                 AUDIT_QUESTIONS.forEach((question, index) => {
                     const itemData = report.items[index] || { status: null, remarks: '', photos: [] };
@@ -746,12 +721,10 @@
                     const isNonCompliant = itemData.status === 'non-compliant';
                     const isNA = itemData.status === 'na';
 
-                    // Parse category and clean question text
                     const match = question.match(/^\[(.*?)\]/);
                     let categoryTitle = match ? escapeHTML(match[1]) : 'General Audit';
                     let cleanQuestion = escapeHTML(question.replace(/^\[(.*?)\]\s*/, ''));
                     
-                    // Render Section Header if category changes
                     if (categoryTitle && categoryTitle !== currentCategoryRender) {
                         const header = document.createElement('div');
                         header.className = "bg-sky-50 border-y border-sky-100 px-4 sm:px-6 py-3 mt-4 first:mt-0 avoid-break print:bg-slate-100 print:border-slate-300 print:mt-1 print:py-1 print:px-2";
@@ -775,14 +748,11 @@
 
                     row.innerHTML = `
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-start print:gap-1">
-                            <!-- Question -->
                             <div class="md:col-span-5 pr-0 md:pr-4">
                                 <div class="flex items-start flex-wrap gap-y-2 print:gap-y-0.5">
                                     <span class="text-slate-400 text-sm font-bold mr-2 mt-1 print:text-[10px] print:mt-0">${index + 1}.</span>
                                     <span class="text-slate-800 font-medium print:text-[10px] print:leading-tight flex-1">${cleanQuestion}</span>
                                 </div>
-                                
-                                <!-- Print Only Status Display -->
                                 <div class="hidden print:block mt-2 font-bold text-sm print:mt-0.5 print:text-[10px]">
                                     Status: 
                                     ${isCompliant ? '<span class="text-green-600 border border-green-600 px-2 py-0.5 rounded print:px-1 print:py-0">Compliant</span>' : 
@@ -792,7 +762,6 @@
                                 </div>
                             </div>
 
-                            <!-- Status Buttons (Hidden in Print & Preview) -->
                             <div class="md:col-span-4 flex gap-1.5 sm:gap-2 justify-center no-print">
                                 <button onclick="app.updateItemStatus(${index}, 'compliant')" 
                                     class="status-btn flex-1 py-3 md:py-2 px-1 sm:px-2 border border-slate-200 rounded-md text-xs sm:text-sm font-medium transition-colors ${isCompliant ? 'selected-compliant' : 'text-sky-600 hover:bg-slate-100'}">
@@ -808,7 +777,6 @@
                                 </button>
                             </div>
 
-                            <!-- Remarks Action -->
                             <div class="md:col-span-3 flex flex-col gap-2 print:gap-0.5 print:mt-0 print:border-none print:pt-0">
                                 ${remarksContentHtml}
                             </div>
@@ -820,7 +788,6 @@
             }
         };
 
-        // Initialize application on load
         window.onload = () => {
             app.init();
         };
