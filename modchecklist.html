@@ -477,23 +477,26 @@
 
             handleItemPhotoUpload(event) {
                 const files = Array.from(event.target.files);
+                const input = event.target;
                 const report = this.getCurrentReport();
+                let pending = files.length;
                 files.forEach(file => {
                     const currentMB = new Blob([JSON.stringify(report)]).size / (1024 * 1024);
                     const budgetMB = Math.max(0.1, 10 - currentMB);
                     this.compressImage(file, (base64, wouldExceed) => {
+                        pending--;
                         if (wouldExceed) {
                             const photoMB = ((base64.length * 0.75) / (1024 * 1024)).toFixed(2);
                             alert(`⚠️ Cannot add photo — even at minimum quality (${photoMB} MB) it would exceed the 10 MB PDF limit.\nCurrent report size: ${currentMB.toFixed(2)} MB. Please remove some existing photos first.`);
-                            return;
+                        } else {
+                            if (!report.items[this.currentUploadIndex].photos) report.items[this.currentUploadIndex].photos = [];
+                            report.items[this.currentUploadIndex].photos.push(base64);
+                            this.saveToLocal();
+                            this.renderChecklist();
                         }
-                        if (!report.items[this.currentUploadIndex].photos) report.items[this.currentUploadIndex].photos = [];
-                        report.items[this.currentUploadIndex].photos.push(base64);
-                        this.saveToLocal();
-                        this.renderChecklist();
+                        if (pending === 0) input.value = '';
                     }, budgetMB);
                 });
-                event.target.value = '';
             },
 
             removeItemPhoto(itemIdx, photoIdx) {
@@ -506,22 +509,25 @@
 
             handleGeneralPhotoUpload(event) {
                 const files = Array.from(event.target.files);
+                const input = event.target;
                 const report = this.getCurrentReport();
+                let pending = files.length;
                 files.forEach(file => {
                     const currentMB = new Blob([JSON.stringify(report)]).size / (1024 * 1024);
                     const budgetMB = Math.max(0.1, 10 - currentMB);
                     this.compressImage(file, (base64, wouldExceed) => {
+                        pending--;
                         if (wouldExceed) {
                             const photoMB = ((base64.length * 0.75) / (1024 * 1024)).toFixed(2);
                             alert(`⚠️ Cannot add photo — even at minimum quality (${photoMB} MB) it would exceed the 10 MB PDF limit.\nCurrent report size: ${currentMB.toFixed(2)} MB. Please remove some existing photos first.`);
-                            return;
+                        } else {
+                            report.generalPhotos.push(base64);
+                            this.saveToLocal();
+                            this.renderGeneralPhotos();
                         }
-                        report.generalPhotos.push(base64);
-                        this.saveToLocal();
-                        this.renderGeneralPhotos();
+                        if (pending === 0) input.value = '';
                     }, budgetMB);
                 });
-                event.target.value = '';
             },
 
             removeGeneralPhoto(idx) {
