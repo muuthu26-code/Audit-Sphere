@@ -50,14 +50,6 @@
         
         .grid-input { border-bottom: 1px solid #f1f5f9; transition: border-color 0.2s; }
         .grid-input:focus { border-color: #0d9488; outline: none; }
-
-        /* Lightbox */
-        #photo-lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center; cursor:zoom-out; }
-        #photo-lightbox.open { display:flex; }
-        #photo-lightbox img { max-width:94vw; max-height:94vh; object-fit:contain; border-radius:6px; box-shadow:0 0 60px rgba(0,0,0,0.8); animation:lbIn .15s ease; }
-        @keyframes lbIn { from{transform:scale(0.85);opacity:0} to{transform:scale(1);opacity:1} }
-        #photo-lightbox-close { position:absolute; top:16px; right:20px; color:#fff; font-size:2rem; cursor:pointer; line-height:1; font-weight:700; }
-        @media print { #photo-lightbox { display:none !important; } }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
@@ -170,18 +162,8 @@
         <input type="file" id="general-photo-upload" accept="image/*" multiple class="hidden" onchange="app.handleGeneralPhotoUpload(event)">
     </div>
 
-    <!-- Photo Lightbox -->
-    <div id="photo-lightbox" onclick="this.classList.remove('open')">
-        <span id="photo-lightbox-close" onclick="document.getElementById('photo-lightbox').classList.remove('open')">&times;</span>
-        <img id="photo-lightbox-img" src="" alt="Photo Evidence">
-    </div>
-
     <script>
         "use strict";
-        function openLightbox(src) {
-            document.getElementById('photo-lightbox-img').src = src;
-            document.getElementById('photo-lightbox').classList.add('open');
-        }
 
         // Structured Audit Questions Sequence
         const AUDIT_QUESTIONS = Object.freeze([
@@ -261,20 +243,24 @@
             },
 
             saveToLocal() {
-                localStorage.setItem('hotelModAuditsV7', JSON.stringify(this.reports));
-                this.updateSizeIndicator();
+                try {
+                    localStorage.setItem('hotelModAuditsV7', JSON.stringify(this.reports));
+                    this.updateSizeIndicator();
+                    return true;
+                } catch (e) {
+                    console.error("Local storage error:", e);
+                    return false;
+                }
             },
 
             updateSizeIndicator() {
-                const report = this.getCurrentReport();
-                if (!report) return;
-                const sizeMB = (new Blob([JSON.stringify(report)]).size / (1024 * 1024)).toFixed(2);
+                const sizeMB = (new Blob([JSON.stringify(this.reports)]).size / (1024 * 1024)).toFixed(2);
                 const badge = document.getElementById('report-size-badge');
                 if (badge) {
-                    badge.textContent = `Report Size Est: ${sizeMB} MB (PDF Limit: 10 MB)`;
-                    if (sizeMB > 9.0) {
+                    badge.textContent = `Storage: ${sizeMB} MB / 4.8 MB`;
+                    if (sizeMB > 4.5) {
                         badge.className = "text-[10px] font-black px-2 py-0.5 rounded-md bg-red-100 text-red-600 border border-red-200 uppercase w-fit";
-                    } else if (sizeMB > 7.0) {
+                    } else if (sizeMB > 3.5) {
                         badge.className = "text-[10px] font-black px-2 py-0.5 rounded-md bg-amber-100 text-amber-600 border border-amber-200 uppercase w-fit";
                     } else {
                         badge.className = "text-[10px] font-black px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 border border-slate-200 uppercase w-fit";
@@ -429,15 +415,14 @@
                 }
             },
 
-            // Compresses image to fit within the remaining MB budget.
-            // Tries quality from 0.85 down to 0.50 in steps to find the best that fits.
-            // If even 0.50 doesn't fit, returns the 0.50 version anyway and lets the caller decide.
+            // Compresses image heavily to fit within LocalStorage budget.
             compressImage(file, callback, budgetMB) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const img = new Image();
                     img.onload = () => {
-                        const MAX_SIZE = 1600;
+                        // Max dimension 800px drastically reduces file size allowing many more photos
+                        const MAX_SIZE = 800; 
                         let w = img.width, h = img.height;
                         if (w > h) { if (w > MAX_SIZE) { h = Math.round(h * MAX_SIZE / w); w = MAX_SIZE; } }
                         else       { if (h > MAX_SIZE) { w = Math.round(w * MAX_SIZE / h); h = MAX_SIZE; } }
@@ -449,22 +434,16 @@
                         ctx.imageSmoothingQuality = 'high';
                         ctx.drawImage(img, 0, 0, w, h);
 
-                        // If no budget constraint, use best quality
-                        if (!budgetMB) {
-                            callback(canvas.toDataURL('image/jpeg', 0.85), false);
-                            return;
-                        }
-
-                        // Try qualities from best to minimum to find one that fits
-                        const qualities = [0.85, 0.75, 0.65, 0.55, 0.50];
+                        // Start with a lower quality (0.6) to save space immediately
+                        const qualities = [0.6, 0.5, 0.4];
                         let chosen = null;
                         for (const q of qualities) {
                             const b64 = canvas.toDataURL('image/jpeg', q);
                             const sizeMB = (b64.length * 0.75) / (1024 * 1024);
-                            if (sizeMB <= budgetMB) { chosen = { b64, q }; break; }
-                            if (!chosen) chosen = { b64, q }; // keep smallest so far
+                            if (!budgetMB || sizeMB <= budgetMB) { chosen = { b64, q }; break; }
+                            if (!chosen) chosen = { b64, q }; 
                         }
-                        const wouldExceed = (chosen.b64.length * 0.75) / (1024 * 1024) > budgetMB;
+                        const wouldExceed = budgetMB && ((chosen.b64.length * 0.75) / (1024 * 1024) > budgetMB);
                         callback(chosen.b64, wouldExceed);
                     };
                     img.src = e.target.result;
@@ -481,18 +460,24 @@
                 const report = this.getCurrentReport();
                 let pending = files.length;
                 files.forEach(file => {
-                    const currentMB = new Blob([JSON.stringify(report)]).size / (1024 * 1024);
-                    const budgetMB = Math.max(0.1, 10 - currentMB);
+                    // Check against the WHOLE storage, not just the current report
+                    const currentMB = new Blob([JSON.stringify(this.reports)]).size / (1024 * 1024);
+                    const budgetMB = Math.max(0.01, 4.8 - currentMB); // 4.8MB safe margin for 5MB limit
                     this.compressImage(file, (base64, wouldExceed) => {
                         pending--;
                         if (wouldExceed) {
-                            const photoMB = ((base64.length * 0.75) / (1024 * 1024)).toFixed(2);
-                            alert(`⚠️ Cannot add photo — even at minimum quality (${photoMB} MB) it would exceed the 10 MB PDF limit.\nCurrent report size: ${currentMB.toFixed(2)} MB. Please remove some existing photos first.`);
+                            alert(`⚠️ Device storage limit reached (~4.8 MB). Please delete older audits from the Dashboard or remove existing photos.`);
                         } else {
                             if (!report.items[this.currentUploadIndex].photos) report.items[this.currentUploadIndex].photos = [];
                             report.items[this.currentUploadIndex].photos.push(base64);
-                            this.saveToLocal();
-                            this.renderChecklist();
+                            
+                            const success = this.saveToLocal();
+                            if(success) {
+                                this.renderChecklist();
+                            } else {
+                                report.items[this.currentUploadIndex].photos.pop(); // Revert
+                                alert("Failed to save photo due to full storage space. Please delete old reports.");
+                            }
                         }
                         if (pending === 0) input.value = '';
                     }, budgetMB);
@@ -513,17 +498,21 @@
                 const report = this.getCurrentReport();
                 let pending = files.length;
                 files.forEach(file => {
-                    const currentMB = new Blob([JSON.stringify(report)]).size / (1024 * 1024);
-                    const budgetMB = Math.max(0.1, 10 - currentMB);
+                    const currentMB = new Blob([JSON.stringify(this.reports)]).size / (1024 * 1024);
+                    const budgetMB = Math.max(0.01, 4.8 - currentMB);
                     this.compressImage(file, (base64, wouldExceed) => {
                         pending--;
                         if (wouldExceed) {
-                            const photoMB = ((base64.length * 0.75) / (1024 * 1024)).toFixed(2);
-                            alert(`⚠️ Cannot add photo — even at minimum quality (${photoMB} MB) it would exceed the 10 MB PDF limit.\nCurrent report size: ${currentMB.toFixed(2)} MB. Please remove some existing photos first.`);
+                            alert(`⚠️ Device storage limit reached (~4.8 MB). Please delete older audits from the Dashboard or remove existing photos.`);
                         } else {
                             report.generalPhotos.push(base64);
-                            this.saveToLocal();
-                            this.renderGeneralPhotos();
+                            const success = this.saveToLocal();
+                            if(success) {
+                                this.renderGeneralPhotos();
+                            } else {
+                                report.generalPhotos.pop(); // Revert
+                                alert("Failed to save photo due to full storage space. Please delete old reports.");
+                            }
                         }
                         if (pending === 0) input.value = '';
                     }, budgetMB);
@@ -597,9 +586,7 @@
                 const container = document.getElementById('general-photos-container');
                 container.innerHTML = r.generalPhotos.map((p, i) => `
                     <div class="relative shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-xl border border-slate-200 overflow-hidden print:w-20 print:h-20">
-                        <a href="${p}" target="_blank" onclick="event.preventDefault();openLightbox('${p}')" class="block w-full h-full cursor-zoom-in">
-                            <img src="${p}" class="w-full h-full object-cover">
-                        </a>
+                        <img src="${p}" class="w-full h-full object-cover">
                         <button onclick="app.removeGeneralPhoto(${i})" class="no-print absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-lg"><i class="fa-solid fa-xmark text-[10px]"></i></button>
                     </div>
                 `).join('');
@@ -629,10 +616,8 @@
                     row.className = "bg-white border-x border-b border-slate-200 p-5 sm:p-6 avoid-break last:rounded-b-2xl print:p-2 print:border-slate-100";
                     
                     const photos = (item.photos || []).map((p, pi) => `
-                        <div class="relative shrink-0 w-16 h-16 sm:w-20 sm:h-20 border border-slate-200 rounded-lg overflow-hidden print:w-20 print:h-20">
-                            <a href="${p}" target="_blank" onclick="event.preventDefault();openLightbox('${p}')" class="block w-full h-full cursor-zoom-in">
-                                <img src="${p}" class="w-full h-full object-cover">
-                            </a>
+                        <div class="relative shrink-0 w-16 h-16 sm:w-20 sm:h-20 border border-slate-200 rounded-lg overflow-hidden print:w-16 print:h-16">
+                            <img src="${p}" class="w-full h-full object-cover">
                             <button onclick="app.removeItemPhoto(${idx}, ${pi})" class="no-print absolute top-0.5 right-0.5 bg-black/60 text-white w-5 h-5 rounded-full"><i class="fa-solid fa-xmark text-[10px]"></i></button>
                         </div>
                     `).join('');
