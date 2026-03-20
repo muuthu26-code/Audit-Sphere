@@ -36,6 +36,7 @@
             .print\:w-20 { width: 5rem !important; }
             .print\:h-20 { height: 5rem !important; }
             .print\:text-\[10px\] { font-size: 10px !important; }
+            .print\:min-w-0 { min-width: 0 !important; }
             * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
         }
         
@@ -78,7 +79,7 @@
                 <h2 class="font-bold text-slate-700 uppercase tracking-wider text-sm">Recent Audits</h2>
             </div>
             <ul id="report-list" class="divide-y divide-slate-100"></ul>
-            <div id="empty-state" class="p-20 text-center text-slate-400 hidden">
+            <div id="empty-state" class="p-10 sm:p-20 text-center text-slate-400 hidden">
                 <i class="fa-solid fa-folder-open text-5xl mb-4 opacity-20"></i>
                 <p>No audit reports found.</p>
             </div>
@@ -91,27 +92,27 @@
         <!-- Navigation / Size Monitor -->
         <div class="no-print flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 bg-white p-4 rounded-2xl shadow-sm border border-slate-200 sticky top-4 z-40 gap-4">
             <div class="flex flex-col">
-                <button onclick="app.showDashboard()" class="text-slate-500 hover:text-slate-800 flex items-center gap-2 font-bold text-sm transition-colors mb-1">
+                <button onclick="app.showDashboard()" class="text-slate-500 hover:text-slate-800 flex items-center gap-2 font-bold text-sm transition-colors mb-1 w-fit">
                     <i class="fa-solid fa-chevron-left"></i> Dashboard
                 </button>
-                <div id="report-size-badge" class="text-[10px] font-black px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 border border-slate-200 uppercase">
+                <div id="report-size-badge" class="text-[10px] font-black px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 border border-slate-200 uppercase w-fit">
                     Attachment Size: 0.0 MB
                 </div>
             </div>
-            <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-                <button onclick="app.togglePreview()" class="bg-slate-100 hover:bg-teal-50 text-slate-700 px-4 py-2 rounded-lg font-bold flex-1 sm:flex-none flex items-center justify-center gap-2 border border-slate-200">
+            <div class="flex flex-col sm:flex-row flex-wrap gap-2 w-full sm:w-auto">
+                <button onclick="app.togglePreview()" class="bg-slate-100 hover:bg-teal-50 text-slate-700 px-4 py-2 rounded-lg font-bold flex-1 sm:flex-none flex items-center justify-center gap-2 border border-slate-200 transition-colors">
                     <i class="fa-solid fa-eye"></i> Preview
                 </button>
-                <button onclick="window.print()" class="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2 rounded-lg font-bold flex-1 sm:flex-none flex items-center justify-center gap-2 shadow-md">
+                <button onclick="window.print()" class="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2 rounded-lg font-bold flex-1 sm:flex-none flex items-center justify-center gap-2 shadow-md transition-colors">
                     <i class="fa-solid fa-file-pdf"></i> Export PDF
                 </button>
             </div>
         </div>
 
         <!-- Metadata Header -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 mb-6 print-border print:p-2 print:mb-2">
-            <div class="grid grid-cols-2 lg:grid-cols-5 gap-6 print:gap-2">
-                <div class="col-span-2 lg:col-span-1">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-8 mb-6 print-border print:p-2 print:mb-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 print:gap-2">
+                <div class="sm:col-span-2 lg:col-span-1">
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">MOD Name</label>
                     <input type="text" id="meta-modName" placeholder="Enter Name" class="w-full border-b-2 border-slate-100 py-1 focus:border-teal-500 bg-transparent font-bold text-slate-800 no-print" oninput="this.nextElementSibling.textContent = this.value || '---'" onchange="app.updateMeta('modName', this.value)">
                     <div class="hidden print-only font-bold text-slate-800 py-1 border-b border-slate-100 break-words"></div>
@@ -140,17 +141,17 @@
         </div>
 
         <!-- Dynamic Checklist Sections -->
-        <div id="checklist-container" class="space-y-6 print:space-y-2"></div>
+        <div id="checklist-container" class="space-y-4 sm:space-y-6 print:space-y-2"></div>
 
         <!-- Overall Summary -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 mt-8 print-border print:p-2 print:mt-4 avoid-break">
-            <div class="flex justify-between items-center mb-4">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-8 mt-6 sm:mt-8 print-border print:p-2 print:mt-4 avoid-break">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
                 <h3 class="text-lg font-bold text-slate-900">General Audit Observation</h3>
-                <button onclick="app.triggerGeneralPhotoUpload()" class="no-print bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2">
+                <button onclick="app.triggerGeneralPhotoUpload()" class="no-print bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 w-full sm:w-auto justify-center transition-colors">
                     <i class="fa-solid fa-camera"></i> Summary Photos
                 </button>
             </div>
-            <textarea id="meta-observation" rows="4" placeholder="Summarize your findings for the day..." class="w-full border border-slate-200 rounded-xl p-4 focus:ring-2 focus:ring-teal-500 outline-none no-print" oninput="document.getElementById('print-meta-observation').textContent = this.value || '---'" onchange="app.updateMeta('observation', this.value)"></textarea>
+            <textarea id="meta-observation" rows="4" placeholder="Summarize your findings for the day..." class="w-full border border-slate-200 rounded-xl p-4 focus:ring-2 focus:ring-teal-500 outline-none no-print transition-shadow" oninput="document.getElementById('print-meta-observation').textContent = this.value || '---'" onchange="app.updateMeta('observation', this.value)"></textarea>
             <div id="print-meta-observation" class="hidden print-only text-[11px] whitespace-pre-wrap border border-slate-100 p-3 rounded min-h-[3rem] mt-2 bg-slate-50 font-medium"></div>
             
             <div id="general-photos-container" class="mt-4 flex gap-2 overflow-x-auto pb-2 hide-scrollbar print:flex-wrap print:overflow-visible"></div>
@@ -254,11 +255,11 @@
                 if (badge) {
                     badge.textContent = `Report Size Est: ${sizeMB} MB (PDF Limit: 10 MB)`;
                     if (sizeMB > 9.0) {
-                        badge.className = "text-[10px] font-black px-2 py-0.5 rounded-md bg-red-100 text-red-600 border border-red-200 uppercase";
+                        badge.className = "text-[10px] font-black px-2 py-0.5 rounded-md bg-red-100 text-red-600 border border-red-200 uppercase w-fit";
                     } else if (sizeMB > 7.0) {
-                        badge.className = "text-[10px] font-black px-2 py-0.5 rounded-md bg-amber-100 text-amber-600 border border-amber-200 uppercase";
+                        badge.className = "text-[10px] font-black px-2 py-0.5 rounded-md bg-amber-100 text-amber-600 border border-amber-200 uppercase w-fit";
                     } else {
-                        badge.className = "text-[10px] font-black px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 border border-slate-200 uppercase";
+                        badge.className = "text-[10px] font-black px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 border border-slate-200 uppercase w-fit";
                     }
                 }
             },
@@ -484,16 +485,16 @@
                 empty.classList.add('hidden');
                 this.reports.forEach(r => {
                     const li = document.createElement('li');
-                    li.className = "p-6 hover:bg-slate-50 cursor-pointer flex items-center justify-between group transition-all";
+                    li.className = "p-5 sm:p-6 hover:bg-slate-50 cursor-pointer flex items-center justify-between group transition-all";
                     li.onclick = () => this.openReport(r.id);
                     li.innerHTML = `
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center font-bold">
+                        <div class="flex items-center gap-3 sm:gap-4">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center font-bold text-sm sm:text-base">
                                 ${r.meta.date.split('-')[2]}
                             </div>
                             <div>
-                                <h3 class="font-bold text-slate-800">${r.meta.modName || 'New Audit'}</h3>
-                                <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">${r.meta.date} • ${r.meta.day || '---'}</p>
+                                <h3 class="font-bold text-slate-800 text-sm sm:text-base">${r.meta.modName || 'New Audit'}</h3>
+                                <p class="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-widest">${r.meta.date} • ${r.meta.day || '---'}</p>
                             </div>
                         </div>
                         <button onclick="app.deleteReport('${r.id}', event)" class="text-slate-300 hover:text-red-500 transition-colors p-2"><i class="fa-solid fa-trash-can"></i></button>
@@ -531,7 +532,7 @@
                 const r = this.getCurrentReport();
                 const container = document.getElementById('general-photos-container');
                 container.innerHTML = r.generalPhotos.map((p, i) => `
-                    <div class="relative shrink-0 w-24 h-24 rounded-xl border border-slate-200 overflow-hidden print:w-20 print:h-20">
+                    <div class="relative shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-xl border border-slate-200 overflow-hidden print:w-20 print:h-20">
                         <img src="${p}" class="w-full h-full object-cover">
                         <button onclick="app.removeGeneralPhoto(${i})" class="no-print absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-lg"><i class="fa-solid fa-xmark text-[10px]"></i></button>
                     </div>
@@ -552,17 +553,17 @@
 
                     if (cat !== currentCat) {
                         const header = document.createElement('div');
-                        header.className = "bg-teal-700 text-white px-6 py-2.5 font-black uppercase tracking-widest text-[10px] rounded-t-xl print:bg-slate-100 print:text-black print:border-b print:rounded-none mt-4";
+                        header.className = "bg-teal-700 text-white px-5 sm:px-6 py-2.5 font-black uppercase tracking-widest text-[10px] rounded-t-xl print:bg-slate-100 print:text-black print:border-b print:rounded-none mt-4 sm:mt-6";
                         header.textContent = cat;
                         container.appendChild(header);
                         currentCat = cat;
                     }
 
                     const row = document.createElement('div');
-                    row.className = "bg-white border-x border-b border-slate-200 p-6 avoid-break last:rounded-b-2xl print:p-2 print:border-slate-100";
+                    row.className = "bg-white border-x border-b border-slate-200 p-5 sm:p-6 avoid-break last:rounded-b-2xl print:p-2 print:border-slate-100";
                     
                     const photos = (item.photos || []).map((p, pi) => `
-                        <div class="relative shrink-0 w-20 h-20 border border-slate-200 rounded-lg overflow-hidden print:w-16 print:h-16">
+                        <div class="relative shrink-0 w-16 h-16 sm:w-20 sm:h-20 border border-slate-200 rounded-lg overflow-hidden print:w-16 print:h-16">
                             <img src="${p}" class="w-full h-full object-cover">
                             <button onclick="app.removeItemPhoto(${idx}, ${pi})" class="no-print absolute top-0.5 right-0.5 bg-black/60 text-white w-5 h-5 rounded-full"><i class="fa-solid fa-xmark text-[10px]"></i></button>
                         </div>
@@ -598,14 +599,15 @@
                             inputTypeCol2 = "time"; inputTypeCol3 = "time";
                         }
 
+                        // Added min-w-[600px] print:min-w-0 to the table so inputs don't squash on mobile, requiring horizontal scroll instead
                         let gridHtml = `
-                            <div class="mt-4 overflow-x-auto">
-                                <table class="w-full border-collapse border border-slate-200 text-xs">
+                            <div class="mt-4 overflow-x-auto rounded-lg border border-slate-200">
+                                <table class="w-full min-w-[600px] print:min-w-0 border-collapse text-xs">
                                     <thead>
                                         <tr class="bg-slate-50 print:bg-slate-100">
-                                            <th class="border border-slate-200 p-2 text-left font-black uppercase w-1/3">${col1}</th>
-                                            <th class="border border-slate-200 p-2 text-left font-black uppercase w-1/3">${col2}</th>
-                                            <th class="border border-slate-200 p-2 text-left font-black uppercase w-1/3">${col3}</th>
+                                            <th class="border-b border-slate-200 p-3 text-left font-black uppercase w-1/3">${col1}</th>
+                                            <th class="border-b border-l border-slate-200 p-3 text-left font-black uppercase w-1/3">${col2}</th>
+                                            <th class="border-b border-l border-slate-200 p-3 text-left font-black uppercase w-1/3">${col3}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -613,17 +615,17 @@
                         dataArr.forEach((d, dIdx) => {
                             const keys = Object.keys(d);
                             gridHtml += `
-                                <tr class="print:border-b">
-                                    <td class="border border-slate-200 p-0 print:p-1 align-top">
-                                        <input type="text" value="${d[keys[0]]}" ${isReadOnlyCol1?'readonly':''} placeholder="---" class="w-full p-2 grid-input no-print ${isReadOnlyCol1?'bg-slate-50 font-bold text-slate-700':''}" oninput="this.nextElementSibling.textContent = this.value || '---'" onchange="app.${updateFnName}(${dIdx}, '${keys[0]}', this.value)">
+                                <tr class="print:border-b group">
+                                    <td class="border-b border-slate-200 p-0 print:p-1 align-top bg-white transition-colors group-hover:bg-slate-50">
+                                        <input type="text" value="${d[keys[0]]}" ${isReadOnlyCol1?'readonly':''} placeholder="---" class="w-full min-w-[120px] print:min-w-0 p-3 grid-input no-print ${isReadOnlyCol1?'bg-slate-50 font-bold text-slate-700':'bg-transparent'}" oninput="this.nextElementSibling.textContent = this.value || '---'" onchange="app.${updateFnName}(${dIdx}, '${keys[0]}', this.value)">
                                         <div class="hidden print-only text-[10px] whitespace-pre-wrap break-words p-1 ${isReadOnlyCol1?'font-bold text-slate-800':'text-slate-800'}">${d[keys[0]] || '---'}</div>
                                     </td>
-                                    <td class="border border-slate-200 p-0 print:p-1 align-top">
-                                        <input type="${inputTypeCol2}" value="${d[keys[1]]}" placeholder="---" class="w-full p-2 grid-input no-print" oninput="this.nextElementSibling.textContent = this.value || '---'" onchange="app.${updateFnName}(${dIdx}, '${keys[1]}', this.value)">
+                                    <td class="border-b border-l border-slate-200 p-0 print:p-1 align-top bg-white transition-colors group-hover:bg-slate-50">
+                                        <input type="${inputTypeCol2}" value="${d[keys[1]]}" placeholder="---" class="w-full min-w-[120px] print:min-w-0 p-3 grid-input no-print bg-transparent" oninput="this.nextElementSibling.textContent = this.value || '---'" onchange="app.${updateFnName}(${dIdx}, '${keys[1]}', this.value)">
                                         <div class="hidden print-only text-[10px] whitespace-pre-wrap break-words p-1 text-slate-800">${d[keys[1]] || '---'}</div>
                                     </td>
-                                    <td class="border border-slate-200 p-0 print:p-1 align-top">
-                                        <input type="${inputTypeCol3}" value="${d[keys[2]]}" placeholder="---" class="w-full p-2 grid-input no-print" oninput="this.nextElementSibling.textContent = this.value || '---'" onchange="app.${updateFnName}(${dIdx}, '${keys[2]}', this.value)">
+                                    <td class="border-b border-l border-slate-200 p-0 print:p-1 align-top bg-white transition-colors group-hover:bg-slate-50">
+                                        <input type="${inputTypeCol3}" value="${d[keys[2]]}" placeholder="---" class="w-full min-w-[120px] print:min-w-0 p-3 grid-input no-print bg-transparent" oninput="this.nextElementSibling.textContent = this.value || '---'" onchange="app.${updateFnName}(${dIdx}, '${keys[2]}', this.value)">
                                         <div class="hidden print-only text-[10px] whitespace-pre-wrap break-words p-1 text-slate-800">${d[keys[2]] || '---'}</div>
                                     </td>
                                 </tr>
@@ -644,30 +646,30 @@
                                         <i class="fa-solid fa-camera mr-1"></i> Add Photo Evidence
                                     </button>
                                 </div>
-                                <div class="mt-4 flex gap-2 overflow-x-auto print:flex-wrap print:mt-1">${photos}</div>
+                                <div class="mt-3 flex gap-2 overflow-x-auto print:flex-wrap print:mt-1">${photos}</div>
                                 ` : ''}
                             </div>
                         `;
                     } else {
                         // Standard Rendering
                         row.innerHTML = `
-                            <div class="flex flex-col lg:flex-row gap-6 print:gap-2">
+                            <div class="flex flex-col lg:flex-row gap-4 sm:gap-6 print:gap-2">
                                 <div class="flex-1">
                                     <div class="flex items-start gap-3">
                                         <span class="text-teal-600 font-black text-xs mt-0.5 print:text-slate-400">${idx+1}.</span>
                                         <p class="text-sm font-bold text-slate-800 print:text-[11px] leading-relaxed">${question}</p>
                                     </div>
-                                    <div class="mt-4 no-print"><textarea oninput="this.parentElement.nextElementSibling.textContent = this.value || '---'" onchange="app.updateItemRemarks(${idx}, this.value)" class="w-full border border-slate-100 rounded-lg p-3 text-sm focus:ring-1 focus:ring-teal-500 outline-none" placeholder="Observations..." rows="2">${item.remarks}</textarea></div>
+                                    <div class="mt-3 no-print"><textarea oninput="this.parentElement.nextElementSibling.textContent = this.value || '---'" onchange="app.updateItemRemarks(${idx}, this.value)" class="w-full border border-slate-100 rounded-lg p-3 text-sm focus:ring-1 focus:ring-teal-500 outline-none transition-shadow" placeholder="Observations..." rows="2">${item.remarks}</textarea></div>
                                     <div class="hidden print-only text-[11px] text-slate-800 mt-2 font-medium whitespace-pre-wrap break-words">${item.remarks || '---'}</div>
-                                    ${isBOH ? `<div class="mt-4 flex gap-2 overflow-x-auto print:flex-wrap print:mt-1">${photos}</div>` : ''}
+                                    ${isBOH ? `<div class="mt-3 flex gap-2 overflow-x-auto print:flex-wrap print:mt-1">${photos}</div>` : ''}
                                 </div>
-                                <div class="no-print flex flex-col gap-2 min-w-[150px]">
-                                    <div class="flex gap-1">
-                                        <button onclick="app.updateItemStatus(${idx}, 'compliant')" class="status-btn flex-1 py-2 border border-slate-100 rounded-lg text-[10px] font-black transition-all ${item.status === 'compliant' ? 'selected-compliant' : 'bg-white text-slate-400'}">YES</button>
-                                        <button onclick="app.updateItemStatus(${idx}, 'non-compliant')" class="status-btn flex-1 py-2 border border-slate-100 rounded-lg text-[10px] font-black transition-all ${item.status === 'non-compliant' ? 'selected-non-compliant' : 'bg-white text-slate-400'}">NO</button>
-                                        <button onclick="app.updateItemStatus(${idx}, 'na')" class="status-btn flex-1 py-2 border border-slate-100 rounded-lg text-[10px] font-black transition-all ${item.status === 'na' ? 'selected-na' : 'bg-white text-slate-400'}">N/A</button>
+                                <div class="no-print flex flex-col gap-2 min-w-[150px] w-full lg:w-auto">
+                                    <div class="flex gap-1 w-full">
+                                        <button onclick="app.updateItemStatus(${idx}, 'compliant')" class="status-btn flex-1 py-3 lg:py-2 border border-slate-100 rounded-lg text-[10px] font-black transition-all ${item.status === 'compliant' ? 'selected-compliant' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}">YES</button>
+                                        <button onclick="app.updateItemStatus(${idx}, 'non-compliant')" class="status-btn flex-1 py-3 lg:py-2 border border-slate-100 rounded-lg text-[10px] font-black transition-all ${item.status === 'non-compliant' ? 'selected-non-compliant' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}">NO</button>
+                                        <button onclick="app.updateItemStatus(${idx}, 'na')" class="status-btn flex-1 py-3 lg:py-2 border border-slate-100 rounded-lg text-[10px] font-black transition-all ${item.status === 'na' ? 'selected-na' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}">N/A</button>
                                     </div>
-                                    ${isBOH ? `<button onclick="app.triggerPhotoUpload(${idx})" class="text-[10px] font-black bg-slate-50 hover:bg-teal-50 text-slate-500 hover:text-teal-600 py-2 rounded-lg border border-slate-100 transition-all uppercase tracking-tighter"><i class="fa-solid fa-camera mr-1"></i> Add Evidence</button>` : ''}
+                                    ${isBOH ? `<button onclick="app.triggerPhotoUpload(${idx})" class="text-[10px] font-black bg-slate-50 hover:bg-teal-50 text-slate-500 hover:text-teal-600 py-3 lg:py-2 rounded-lg border border-slate-100 transition-all uppercase tracking-tighter w-full"><i class="fa-solid fa-camera mr-1"></i> Add Evidence</button>` : ''}
                                 </div>
                                 <div class="hidden print-only text-[10px] font-black text-right uppercase pt-1">[${item.status || 'PENDING'}]</div>
                             </div>
