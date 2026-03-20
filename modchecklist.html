@@ -19,23 +19,20 @@
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* --- SCREEN ONLY: visible on screen, hidden in preview + print --- */
-        .screen-only { display: block; }
-        body.preview-mode .screen-only { display: none !important; }
-
-        /* --- PRINT ONLY: hidden on screen, visible in preview + print --- */
-        .print-only-cell { display: none; }
-        body.preview-mode .print-only-cell { display: block !important; }
-
         @media print {
             body { background-color: white !important; color: black !important; font-size: 10px !important; line-height: 1.2 !important; }
             .no-print { display: none !important; }
-            .screen-only { display: none !important; }
             .print-only { display: block !important; }
-            .print-only-cell { display: block !important; }
             .print-border { border: 1px solid #e5e7eb !important; }
             .avoid-break { page-break-inside: avoid; }
-            input, textarea, select { display: none !important; }
+            
+            input, textarea, select { 
+                border: none !important; 
+                background: transparent !important;
+                resize: none !important;
+                padding: 0 !important;
+                appearance: none;
+            }
             .print\:w-20 { width: 5rem !important; }
             .print\:h-20 { height: 5rem !important; }
             .print\:text-\[10px\] { font-size: 10px !important; }
@@ -116,23 +113,28 @@
             <div class="grid grid-cols-2 lg:grid-cols-5 gap-6 print:gap-2">
                 <div class="col-span-2 lg:col-span-1">
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">MOD Name</label>
-                    <input type="text" id="meta-modName" placeholder="Enter Name" class="w-full border-b-2 border-slate-100 py-1 focus:border-teal-500 bg-transparent font-bold text-slate-800" onchange="app.updateMeta('modName', this.value)">
+                    <input type="text" id="meta-modName" placeholder="Enter Name" class="w-full border-b-2 border-slate-100 py-1 focus:border-teal-500 bg-transparent font-bold text-slate-800 no-print" oninput="this.nextElementSibling.textContent = this.value || '---'" onchange="app.updateMeta('modName', this.value)">
+                    <div class="hidden print-only font-bold text-slate-800 py-1 border-b border-slate-100 break-words"></div>
                 </div>
                 <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Day</label>
-                    <input type="text" id="meta-day" placeholder="e.g. Monday" class="w-full border-b-2 border-slate-100 py-1 focus:border-teal-500 bg-transparent font-bold text-slate-800" onchange="app.updateMeta('day', this.value)">
+                    <input type="text" id="meta-day" placeholder="e.g. Monday" class="w-full border-b-2 border-slate-100 py-1 focus:border-teal-500 bg-transparent font-bold text-slate-800 no-print" oninput="this.nextElementSibling.textContent = this.value || '---'" onchange="app.updateMeta('day', this.value)">
+                    <div class="hidden print-only font-bold text-slate-800 py-1 border-b border-slate-100 break-words"></div>
                 </div>
                 <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Date</label>
-                    <input type="date" id="meta-date" class="w-full border-b-2 border-slate-100 py-1 focus:border-teal-500 bg-transparent font-bold text-slate-800" onchange="app.updateMeta('date', this.value)">
+                    <input type="date" id="meta-date" class="w-full border-b-2 border-slate-100 py-1 focus:border-teal-500 bg-transparent font-bold text-slate-800 no-print" oninput="this.nextElementSibling.textContent = this.value || '---'" onchange="app.updateMeta('date', this.value)">
+                    <div class="hidden print-only font-bold text-slate-800 py-1 border-b border-slate-100 break-words"></div>
                 </div>
                 <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Time In</label>
-                    <input type="time" id="meta-timeIn" class="w-full border-b-2 border-slate-100 py-1 focus:border-teal-500 bg-transparent font-bold text-slate-800" onchange="app.updateMeta('timeIn', this.value)">
+                    <input type="time" id="meta-timeIn" class="w-full border-b-2 border-slate-100 py-1 focus:border-teal-500 bg-transparent font-bold text-slate-800 no-print" oninput="this.nextElementSibling.textContent = this.value || '---'" onchange="app.updateMeta('timeIn', this.value)">
+                    <div class="hidden print-only font-bold text-slate-800 py-1 border-b border-slate-100 break-words"></div>
                 </div>
                 <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Time Out</label>
-                    <input type="time" id="meta-timeOut" class="w-full border-b-2 border-slate-100 py-1 focus:border-teal-500 bg-transparent font-bold text-slate-800" onchange="app.updateMeta('timeOut', this.value)">
+                    <input type="time" id="meta-timeOut" class="w-full border-b-2 border-slate-100 py-1 focus:border-teal-500 bg-transparent font-bold text-slate-800 no-print" oninput="this.nextElementSibling.textContent = this.value || '---'" onchange="app.updateMeta('timeOut', this.value)">
+                    <div class="hidden print-only font-bold text-slate-800 py-1 border-b border-slate-100 break-words"></div>
                 </div>
             </div>
         </div>
@@ -148,8 +150,8 @@
                     <i class="fa-solid fa-camera"></i> Summary Photos
                 </button>
             </div>
-            <textarea id="meta-observation" rows="4" placeholder="Summarize your findings for the day..." class="w-full border border-slate-200 rounded-xl p-4 focus:ring-2 focus:ring-teal-500 outline-none print:hidden" onchange="app.updateMeta('observation', this.value)"></textarea>
-            <div id="print-meta-observation" class="hidden print:block text-[11px] whitespace-pre-wrap border border-slate-100 p-2 rounded"></div>
+            <textarea id="meta-observation" rows="4" placeholder="Summarize your findings for the day..." class="w-full border border-slate-200 rounded-xl p-4 focus:ring-2 focus:ring-teal-500 outline-none no-print" oninput="document.getElementById('print-meta-observation').textContent = this.value || '---'" onchange="app.updateMeta('observation', this.value)"></textarea>
+            <div id="print-meta-observation" class="hidden print-only text-[11px] whitespace-pre-wrap border border-slate-100 p-3 rounded min-h-[3rem] mt-2 bg-slate-50 font-medium"></div>
             
             <div id="general-photos-container" class="mt-4 flex gap-2 overflow-x-auto pb-2 hide-scrollbar print:flex-wrap print:overflow-visible"></div>
         </div>
@@ -251,7 +253,6 @@
                 const badge = document.getElementById('report-size-badge');
                 if (badge) {
                     badge.textContent = `Report Size Est: ${sizeMB} MB (PDF Limit: 10 MB)`;
-                    // Warning thresholds updated for 10MB limit
                     if (sizeMB > 9.0) {
                         badge.className = "text-[10px] font-black px-2 py-0.5 rounded-md bg-red-100 text-red-600 border border-red-200 uppercase";
                     } else if (sizeMB > 7.0) {
@@ -334,7 +335,15 @@
                 const report = this.getCurrentReport();
                 if (report) {
                     report.meta[field] = value;
-                    if (field === 'observation') document.getElementById('print-meta-observation').textContent = value;
+                    if (field === 'observation') {
+                        const obsEl = document.getElementById('print-meta-observation');
+                        if (obsEl) obsEl.textContent = value || '---';
+                    } else {
+                        const el = document.getElementById(`meta-${field}`);
+                        if(el && el.nextElementSibling && el.nextElementSibling.classList.contains('print-only')) {
+                            el.nextElementSibling.textContent = value || '---';
+                        }
+                    }
                     this.saveToLocal();
                 }
             },
@@ -407,14 +416,12 @@
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        // Increased MAX_SIZE for better clarity while remaining efficient
                         const MAX_SIZE = 1200; 
                         let w = img.width, h = img.height;
                         if (w > h) { if (w > MAX_SIZE) { h *= MAX_SIZE / w; w = MAX_SIZE; } }
                         else { if (h > MAX_SIZE) { w *= MAX_SIZE / h; h = MAX_SIZE; } }
                         canvas.width = w; canvas.height = h;
                         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                        // Quality set to 0.7 for high clarity without massive file size bloat
                         callback(canvas.toDataURL('image/jpeg', 0.7)); 
                     };
                     img.src = e.target.result;
@@ -497,13 +504,24 @@
 
             renderEditor() {
                 const r = this.getCurrentReport();
-                document.getElementById('meta-modName').value = r.meta.modName;
-                document.getElementById('meta-day').value = r.meta.day;
-                document.getElementById('meta-date').value = r.meta.date;
-                document.getElementById('meta-timeIn').value = r.meta.timeIn;
-                document.getElementById('meta-timeOut').value = r.meta.timeOut;
-                document.getElementById('meta-observation').value = r.meta.observation;
-                document.getElementById('print-meta-observation').textContent = r.meta.observation;
+                
+                const fields = ['modName', 'day', 'date', 'timeIn', 'timeOut'];
+                fields.forEach(f => {
+                    const el = document.getElementById(`meta-${f}`);
+                    if (el) {
+                        el.value = r.meta[f] || '';
+                        if (el.nextElementSibling && el.nextElementSibling.classList.contains('print-only')) {
+                            el.nextElementSibling.textContent = r.meta[f] || '---';
+                        }
+                    }
+                });
+                
+                const obsEl = document.getElementById('meta-observation');
+                if (obsEl) obsEl.value = r.meta.observation || '';
+                
+                const printObsEl = document.getElementById('print-meta-observation');
+                if (printObsEl) printObsEl.textContent = r.meta.observation || '---';
+                
                 this.renderChecklist();
                 this.renderGeneralPhotos();
                 this.updateSizeIndicator();
@@ -582,47 +600,31 @@
 
                         let gridHtml = `
                             <div class="mt-4 overflow-x-auto">
-                                <table style="width:100%; border-collapse:collapse; table-layout:fixed; font-size:12px;">
-                                    <colgroup>
-                                        <col style="width:26%">
-                                        <col style="width:17%">
-                                        <col style="width:57%">
-                                    </colgroup>
+                                <table class="w-full border-collapse border border-slate-200 text-xs">
                                     <thead>
-                                        <tr style="background:#f8fafc;">
-                                            <th style="border:1px solid #e2e8f0; padding:6px 8px; text-align:left; font-size:10px; text-transform:uppercase;">${col1}</th>
-                                            <th style="border:1px solid #e2e8f0; padding:6px 8px; text-align:left; font-size:10px; text-transform:uppercase;">${col2}</th>
-                                            <th style="border:1px solid #e2e8f0; padding:6px 8px; text-align:left; font-size:10px; text-transform:uppercase;">${col3}</th>
+                                        <tr class="bg-slate-50 print:bg-slate-100">
+                                            <th class="border border-slate-200 p-2 text-left font-black uppercase w-1/3">${col1}</th>
+                                            <th class="border border-slate-200 p-2 text-left font-black uppercase w-1/3">${col2}</th>
+                                            <th class="border border-slate-200 p-2 text-left font-black uppercase w-1/3">${col3}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                         `;
                         dataArr.forEach((d, dIdx) => {
                             const keys = Object.keys(d);
-                            const v0 = (d[keys[0]] || '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-                            const v1 = (d[keys[1]] || '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-                            const v2 = (d[keys[2]] || '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-                            // Unique IDs so each input can directly update its sibling print div
-                            const uid = `r${idx}_${dIdx}`;
                             gridHtml += `
-                                <tr>
-                                    <td style="border:1px solid #e2e8f0; padding:0; vertical-align:top;">
-                                        <input id="${uid}_c0" type="text" value="${v0}" ${isReadOnlyCol1?'readonly':''} placeholder="---" class="screen-only grid-input" style="width:100%; padding:6px 8px; font-size:12px; background:${isReadOnlyCol1?'#f8fafc':'white'}; font-weight:${isReadOnlyCol1?'bold':'normal'}; border:none; outline:none;"
-                                            oninput="document.getElementById('${uid}_c0_print').textContent=this.value||'\u00a0'"
-                                            onchange="app.${updateFnName}(${dIdx}, '${keys[0]}', this.value)">
-                                        <div id="${uid}_c0_print" class="print-only-cell" style="padding:6px 8px; font-size:10px; word-break:break-word; white-space:pre-wrap; min-height:20px; font-weight:${isReadOnlyCol1?'bold':'normal'};">${v0 || '\u00a0'}</div>
+                                <tr class="print:border-b">
+                                    <td class="border border-slate-200 p-0 print:p-1 align-top">
+                                        <input type="text" value="${d[keys[0]]}" ${isReadOnlyCol1?'readonly':''} placeholder="---" class="w-full p-2 grid-input no-print ${isReadOnlyCol1?'bg-slate-50 font-bold text-slate-700':''}" oninput="this.nextElementSibling.textContent = this.value || '---'" onchange="app.${updateFnName}(${dIdx}, '${keys[0]}', this.value)">
+                                        <div class="hidden print-only text-[10px] whitespace-pre-wrap break-words p-1 ${isReadOnlyCol1?'font-bold text-slate-800':'text-slate-800'}">${d[keys[0]] || '---'}</div>
                                     </td>
-                                    <td style="border:1px solid #e2e8f0; padding:0; vertical-align:top;">
-                                        <input id="${uid}_c1" type="${inputTypeCol2}" value="${v1}" placeholder="---" class="screen-only grid-input" style="width:100%; padding:6px 8px; font-size:12px; background:white; border:none; outline:none;"
-                                            oninput="document.getElementById('${uid}_c1_print').textContent=this.value||'\u00a0'"
-                                            onchange="app.${updateFnName}(${dIdx}, '${keys[1]}', this.value)">
-                                        <div id="${uid}_c1_print" class="print-only-cell" style="padding:6px 8px; font-size:10px; word-break:break-word; white-space:pre-wrap; min-height:20px;">${v1 || '\u00a0'}</div>
+                                    <td class="border border-slate-200 p-0 print:p-1 align-top">
+                                        <input type="${inputTypeCol2}" value="${d[keys[1]]}" placeholder="---" class="w-full p-2 grid-input no-print" oninput="this.nextElementSibling.textContent = this.value || '---'" onchange="app.${updateFnName}(${dIdx}, '${keys[1]}', this.value)">
+                                        <div class="hidden print-only text-[10px] whitespace-pre-wrap break-words p-1 text-slate-800">${d[keys[1]] || '---'}</div>
                                     </td>
-                                    <td style="border:1px solid #e2e8f0; padding:0; vertical-align:top;">
-                                        <textarea id="${uid}_c2" placeholder="Type here..." class="screen-only grid-input" rows="2" style="width:100%; padding:6px 8px; font-size:12px; background:white; border:none; outline:none; resize:vertical; font-family:inherit;"
-                                            oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';document.getElementById('${uid}_c2_print').textContent=this.value||'\u00a0'"
-                                            onchange="app.${updateFnName}(${dIdx}, '${keys[2]}', this.value)">${v2}</textarea>
-                                        <div id="${uid}_c2_print" class="print-only-cell" style="padding:6px 8px; font-size:10px; word-break:break-word; white-space:pre-wrap; line-height:1.5; min-height:20px;">${v2 || '\u00a0'}</div>
+                                    <td class="border border-slate-200 p-0 print:p-1 align-top">
+                                        <input type="${inputTypeCol3}" value="${d[keys[2]]}" placeholder="---" class="w-full p-2 grid-input no-print" oninput="this.nextElementSibling.textContent = this.value || '---'" onchange="app.${updateFnName}(${dIdx}, '${keys[2]}', this.value)">
+                                        <div class="hidden print-only text-[10px] whitespace-pre-wrap break-words p-1 text-slate-800">${d[keys[2]] || '---'}</div>
                                     </td>
                                 </tr>
                             `;
@@ -655,8 +657,8 @@
                                         <span class="text-teal-600 font-black text-xs mt-0.5 print:text-slate-400">${idx+1}.</span>
                                         <p class="text-sm font-bold text-slate-800 print:text-[11px] leading-relaxed">${question}</p>
                                     </div>
-                                    <div class="mt-4 screen-only"><textarea id="remarks_print_ta_${idx}" onchange="app.updateItemRemarks(${idx}, this.value)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';document.getElementById('remarks_print_${idx}').textContent=this.value||'No remarks recorded.'" class="w-full border border-slate-100 rounded-lg p-3 text-sm focus:ring-1 focus:ring-teal-500 outline-none resize-none" placeholder="Observations..." rows="2">${item.remarks}</textarea></div>
-                                    <div id="remarks_print_${idx}" class="print-only-cell" style="font-size:10px; color:#475569; margin-top:4px; font-style:italic; white-space:pre-wrap; word-break:break-word; line-height:1.5; min-height:16px;">${item.remarks || 'No remarks recorded.'}</div>
+                                    <div class="mt-4 no-print"><textarea oninput="this.parentElement.nextElementSibling.textContent = this.value || '---'" onchange="app.updateItemRemarks(${idx}, this.value)" class="w-full border border-slate-100 rounded-lg p-3 text-sm focus:ring-1 focus:ring-teal-500 outline-none" placeholder="Observations..." rows="2">${item.remarks}</textarea></div>
+                                    <div class="hidden print-only text-[11px] text-slate-800 mt-2 font-medium whitespace-pre-wrap break-words">${item.remarks || '---'}</div>
                                     ${isBOH ? `<div class="mt-4 flex gap-2 overflow-x-auto print:flex-wrap print:mt-1">${photos}</div>` : ''}
                                 </div>
                                 <div class="no-print flex flex-col gap-2 min-w-[150px]">
@@ -667,7 +669,7 @@
                                     </div>
                                     ${isBOH ? `<button onclick="app.triggerPhotoUpload(${idx})" class="text-[10px] font-black bg-slate-50 hover:bg-teal-50 text-slate-500 hover:text-teal-600 py-2 rounded-lg border border-slate-100 transition-all uppercase tracking-tighter"><i class="fa-solid fa-camera mr-1"></i> Add Evidence</button>` : ''}
                                 </div>
-                                <div class="print-only-cell" style="font-size:10px; font-weight:900; text-align:right; text-transform:uppercase; padding-top:4px;">[${item.status || 'PENDING'}]</div>
+                                <div class="hidden print-only text-[10px] font-black text-right uppercase pt-1">[${item.status || 'PENDING'}]</div>
                             </div>
                         `;
                     }
