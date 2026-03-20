@@ -49,6 +49,29 @@
         
         .grid-input { border-bottom: 1px solid #f1f5f9; transition: border-color 0.2s; }
         .grid-input:focus { border-color: #0d9488; outline: none; }
+
+        /* Photo zoom lightbox (browser view) */
+        #photo-lightbox {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88);
+            z-index: 9999; align-items: center; justify-content: center; cursor: zoom-out;
+        }
+        #photo-lightbox.active { display: flex; }
+        #photo-lightbox img {
+            max-width: 92vw; max-height: 92vh; border-radius: 8px;
+            box-shadow: 0 0 60px rgba(0,0,0,0.8); object-fit: contain;
+            animation: zoomIn 0.18s ease;
+        }
+        @keyframes zoomIn { from { transform: scale(0.82); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        #photo-lightbox-close {
+            position: absolute; top: 18px; right: 22px; color: white;
+            font-size: 2rem; cursor: pointer; font-weight: bold; line-height: 1;
+        }
+
+        /* PDF: photos rendered larger and anchor href preserved so clicking in PDF opens full image */
+        @media print {
+            .photo-thumb { width: 96px !important; height: 96px !important; page-break-inside: avoid; }
+            .photo-thumb img { width: 100% !important; height: 100% !important; object-fit: cover !important; }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
@@ -156,8 +179,19 @@
         <input type="file" id="general-photo-upload" accept="image/*" multiple class="hidden" onchange="app.handleGeneralPhotoUpload(event)">
     </div>
 
+    <!-- Photo Lightbox (browser zoom) -->
+    <div id="photo-lightbox" onclick="this.classList.remove('active')">
+        <span id="photo-lightbox-close" onclick="document.getElementById('photo-lightbox').classList.remove('active')">&times;</span>
+        <img id="photo-lightbox-img" src="" alt="Photo Evidence">
+    </div>
+
     <script>
         "use strict";
+        function openPhotoZoom(src) {
+            const lb = document.getElementById('photo-lightbox');
+            document.getElementById('photo-lightbox-img').src = src;
+            lb.classList.add('active');
+        }
 
         // Structured Audit Questions Sequence
         const AUDIT_QUESTIONS = Object.freeze([
@@ -297,7 +331,8 @@
                     }
                     if (idx === 32) {
                         newReport.items[idx].dropData = [
-                            { label: '1st Drop', time1: '', time2: '' }, { label: '2nd Drop', time1: '', time2: '' }
+                            { label: '1st Drop', time1: '', pax1: '', time2: '', pax2: '', remarks: '' },
+                            { label: '2nd Drop', time1: '', pax1: '', time2: '', pax2: '', remarks: '' }
                         ];
                     }
                 });
@@ -375,7 +410,9 @@
             updateDropInteraction(rowIdx, field, value) {
                 const report = this.getCurrentReport();
                 if (report && report.items[32]) {
-                    if (!report.items[32].dropData) report.items[32].dropData = [{ label: '1st Drop', time1: '', time2: '' },{ label: '2nd Drop', time1: '', time2: '' }];
+                    if (!report.items[32].dropData) report.items[32].dropData = [{ label: '1st Drop', time1: '', pax1: '', time2: '', pax2: '', remarks: '' },{ label: '2nd Drop', time1: '', pax1: '', time2: '', pax2: '', remarks: '' }];
+                    // Migrate old rows that lack pax1/pax2/remarks
+                    report.items[32].dropData.forEach(d => { if (d.pax1 === undefined) d.pax1 = d.pax || ''; if (d.pax2 === undefined) d.pax2 = ''; if (d.remarks === undefined) d.remarks = ''; });
                     report.items[32].dropData[rowIdx][field] = value;
                     this.saveToLocal();
                 }
@@ -404,15 +441,18 @@
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        // Increased MAX_SIZE for better clarity while remaining efficient
-                        const MAX_SIZE = 1200; 
+                        // MAX_SIZE 1600 for high-clarity photos in PDF export
+                        const MAX_SIZE = 1600; 
                         let w = img.width, h = img.height;
                         if (w > h) { if (w > MAX_SIZE) { h *= MAX_SIZE / w; w = MAX_SIZE; } }
                         else { if (h > MAX_SIZE) { w *= MAX_SIZE / h; h = MAX_SIZE; } }
                         canvas.width = w; canvas.height = h;
-                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                        // Quality set to 0.7 for high clarity without massive file size bloat
-                        callback(canvas.toDataURL('image/jpeg', 0.7)); 
+                        const ctx = canvas.getContext('2d');
+                        ctx.imageSmoothingEnabled = true;
+                        ctx.imageSmoothingQuality = 'high';
+                        ctx.drawImage(img, 0, 0, w, h);
+                        // Quality 0.85 — high clarity while keeping total PDF under 10 MB
+                        callback(canvas.toDataURL('image/jpeg', 0.85)); 
                     };
                     img.src = e.target.result;
                 };
@@ -428,6 +468,13 @@
                 files.forEach(file => {
                     this.compressImage(file, (base64) => {
                         if (!report.items[this.currentUploadIndex].photos) report.items[this.currentUploadIndex].photos = [];
+                        // Guard: warn if adding this photo would exceed 10 MB PDF limit
+                        const currentSizeMB = parseFloat((new Blob([JSON.stringify(report)]).size / (1024 * 1024)).toFixed(2));
+                        const photoSizeMB = parseFloat((base64.length * 0.75 / (1024 * 1024)).toFixed(2));
+                        if (currentSizeMB + photoSizeMB > 10) {
+                            alert(`⚠️ Adding this photo would exceed the 10 MB PDF limit (current: ${currentSizeMB} MB + photo: ${photoSizeMB} MB). Please remove some photos first.`);
+                            return;
+                        }
                         report.items[this.currentUploadIndex].photos.push(base64);
                         this.saveToLocal();
                         this.renderChecklist();
@@ -448,6 +495,12 @@
                 const report = this.getCurrentReport();
                 files.forEach(file => {
                     this.compressImage(file, (base64) => {
+                        const currentSizeMB = parseFloat((new Blob([JSON.stringify(report)]).size / (1024 * 1024)).toFixed(2));
+                        const photoSizeMB = parseFloat((base64.length * 0.75 / (1024 * 1024)).toFixed(2));
+                        if (currentSizeMB + photoSizeMB > 10) {
+                            alert(`⚠️ Adding this photo would exceed the 10 MB PDF limit (current: ${currentSizeMB} MB + photo: ${photoSizeMB} MB). Please remove some photos first.`);
+                            return;
+                        }
                         report.generalPhotos.push(base64);
                         this.saveToLocal();
                         this.renderGeneralPhotos();
@@ -510,10 +563,10 @@
                 const r = this.getCurrentReport();
                 const container = document.getElementById('general-photos-container');
                 container.innerHTML = r.generalPhotos.map((p, i) => `
-                    <div class="relative shrink-0 w-24 h-24 rounded-xl border border-slate-200 overflow-hidden print:w-20 print:h-20">
+                    <a href="${p}" target="_blank" onclick="event.preventDefault(); openPhotoZoom('${p}')" class="photo-thumb relative shrink-0 w-24 h-24 rounded-xl border border-slate-200 overflow-hidden cursor-zoom-in print:w-28 print:h-28 block">
                         <img src="${p}" class="w-full h-full object-cover">
-                        <button onclick="app.removeGeneralPhoto(${i})" class="no-print absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-lg"><i class="fa-solid fa-xmark text-[10px]"></i></button>
-                    </div>
+                        <button onclick="event.stopPropagation(); app.removeGeneralPhoto(${i})" class="no-print absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-lg"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                    </a>
                 `).join('');
             },
 
@@ -541,10 +594,10 @@
                     row.className = "bg-white border-x border-b border-slate-200 p-6 avoid-break last:rounded-b-2xl print:p-2 print:border-slate-100";
                     
                     const photos = (item.photos || []).map((p, pi) => `
-                        <div class="relative shrink-0 w-20 h-20 border border-slate-200 rounded-lg overflow-hidden print:w-16 print:h-16">
+                        <a href="${p}" target="_blank" onclick="event.preventDefault(); openPhotoZoom('${p}')" class="photo-thumb relative shrink-0 w-20 h-20 border border-slate-200 rounded-lg overflow-hidden cursor-zoom-in print:w-24 print:h-24 block">
                             <img src="${p}" class="w-full h-full object-cover">
-                            <button onclick="app.removeItemPhoto(${idx}, ${pi})" class="no-print absolute top-0.5 right-0.5 bg-black/60 text-white w-5 h-5 rounded-full"><i class="fa-solid fa-xmark text-[10px]"></i></button>
-                        </div>
+                            <button onclick="event.stopPropagation(); app.removeItemPhoto(${idx}, ${pi})" class="no-print absolute top-0.5 right-0.5 bg-black/60 text-white w-5 h-5 rounded-full"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                        </a>
                     `).join('');
 
                     // Specialized Grid Renders
@@ -572,12 +625,52 @@
                             dataArr = item.tallyData || [{ outlet: 'Tattva Spa', morning: '', evening: '' },{ outlet: 'Restaurant', morning: '', evening: '' }];
                             col1 = "Outlet"; col2 = "Morning"; col3 = "Evening"; updateFnName = "updateTallyInteraction";
                         } else if (idx === 32) {
-                            dataArr = item.dropData || [{ label: '1st Drop', time1: '', time2: '' },{ label: '2nd Drop', time1: '', time2: '' }];
-                            col1 = "Drop Point"; col2 = "Time 1"; col3 = "Time 2"; updateFnName = "updateDropInteraction";
-                            inputTypeCol2 = "time"; inputTypeCol3 = "time";
+                            // Drop table rendered separately below as 5-column custom table
                         }
 
-                        let gridHtml = `
+                        let gridHtml = '';
+                        if (idx === 32) {
+                            // Custom 6-column table: Drop Point | Time 1 | No. of Pax | Time 2 | No. of Pax | Remarks
+                            const dropRows = item.dropData || [
+                                { label: '1st Drop', time1: '', pax1: '', time2: '', pax2: '', remarks: '' },
+                                { label: '2nd Drop', time1: '', pax1: '', time2: '', pax2: '', remarks: '' }
+                            ];
+                            // Migrate old data
+                            dropRows.forEach(d => {
+                                if (d.pax1 === undefined) d.pax1 = d.pax || '';
+                                if (d.pax2 === undefined) d.pax2 = '';
+                                if (d.remarks === undefined) d.remarks = '';
+                            });
+                            gridHtml = `
+                                <div class="mt-4 overflow-x-auto">
+                                    <table class="w-full border-collapse border border-slate-200 text-xs">
+                                        <thead>
+                                            <tr class="bg-slate-50 print:bg-slate-100">
+                                                <th class="border border-slate-200 p-2 text-left font-black uppercase w-24">Drop Point</th>
+                                                <th class="border border-slate-200 p-2 text-left font-black uppercase w-24">Time 1</th>
+                                                <th class="border border-slate-200 p-2 text-left font-black uppercase w-20">No. of Pax</th>
+                                                <th class="border border-slate-200 p-2 text-left font-black uppercase w-24">Time 2</th>
+                                                <th class="border border-slate-200 p-2 text-left font-black uppercase w-20">No. of Pax</th>
+                                                <th class="border border-slate-200 p-2 text-left font-black uppercase">Remarks</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${dropRows.map((d, dIdx) => `
+                                                <tr class="print:border-b">
+                                                    <td class="border border-slate-200 p-0 print:p-1"><input type="text" value="${d.label}" readonly class="w-full p-2 grid-input print:text-[10px] bg-slate-50 font-bold"></td>
+                                                    <td class="border border-slate-200 p-0 print:p-1"><input type="time" value="${d.time1}" class="w-full p-2 grid-input print:text-[10px]" onchange="app.updateDropInteraction(${dIdx}, 'time1', this.value)"></td>
+                                                    <td class="border border-slate-200 p-0 print:p-1"><input type="number" min="0" value="${d.pax1}" placeholder="0" class="w-full p-2 grid-input print:text-[10px]" onchange="app.updateDropInteraction(${dIdx}, 'pax1', this.value)"></td>
+                                                    <td class="border border-slate-200 p-0 print:p-1"><input type="time" value="${d.time2}" class="w-full p-2 grid-input print:text-[10px]" onchange="app.updateDropInteraction(${dIdx}, 'time2', this.value)"></td>
+                                                    <td class="border border-slate-200 p-0 print:p-1"><input type="number" min="0" value="${d.pax2}" placeholder="0" class="w-full p-2 grid-input print:text-[10px]" onchange="app.updateDropInteraction(${dIdx}, 'pax2', this.value)"></td>
+                                                    <td class="border border-slate-200 p-0 print:p-1"><input type="text" value="${d.remarks}" placeholder="---" class="w-full p-2 grid-input print:text-[10px]" onchange="app.updateDropInteraction(${dIdx}, 'remarks', this.value)"></td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            `;
+                        } else {
+                        gridHtml = `
                             <div class="mt-4 overflow-x-auto">
                                 <table class="w-full border-collapse border border-slate-200 text-xs">
                                     <thead>
@@ -595,11 +688,15 @@
                                 <tr class="print:border-b">
                                     <td class="border border-slate-200 p-0 print:p-1"><input type="text" value="${d[keys[0]]}" ${isReadOnlyCol1?'readonly':''} placeholder="---" class="w-full p-2 grid-input print:text-[10px] ${isReadOnlyCol1?'bg-slate-50 font-bold':''}" onchange="app.${updateFnName}(${dIdx}, '${keys[0]}', this.value)"></td>
                                     <td class="border border-slate-200 p-0 print:p-1"><input type="${inputTypeCol2}" value="${d[keys[1]]}" placeholder="---" class="w-full p-2 grid-input print:text-[10px]" onchange="app.${updateFnName}(${dIdx}, '${keys[1]}', this.value)"></td>
-                                    <td class="border border-slate-200 p-0 print:p-1"><input type="${inputTypeCol3}" value="${d[keys[2]]}" placeholder="---" class="w-full p-2 grid-input print:text-[10px]" onchange="app.${updateFnName}(${dIdx}, '${keys[2]}', this.value)"></td>
+                                    <td class="border border-slate-200 p-0 print:p-1 print:align-top">
+                                        <textarea placeholder="---" rows="2" class="no-print w-full p-2 grid-input text-xs resize-none focus:outline-none" onchange="app.${updateFnName}(${dIdx}, '${keys[2]}', this.value)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${d[keys[2]]}</textarea>
+                                        <div class="hidden print:block text-[10px] p-1 whitespace-pre-wrap break-words leading-snug min-h-[1.5rem]">${d[keys[2]] || ''}</div>
+                                    </td>
                                 </tr>
                             `;
                         });
                         gridHtml += `</tbody></table></div>`;
+                        }
 
                         row.innerHTML = `
                             <div class="flex flex-col gap-2">
@@ -627,8 +724,8 @@
                                         <span class="text-teal-600 font-black text-xs mt-0.5 print:text-slate-400">${idx+1}.</span>
                                         <p class="text-sm font-bold text-slate-800 print:text-[11px] leading-relaxed">${question}</p>
                                     </div>
-                                    <div class="mt-4 no-print"><textarea onchange="app.updateItemRemarks(${idx}, this.value)" class="w-full border border-slate-100 rounded-lg p-3 text-sm focus:ring-1 focus:ring-teal-500 outline-none" placeholder="Observations..." rows="1">${item.remarks}</textarea></div>
-                                    <div class="hidden print:block text-[10px] text-slate-500 mt-1 italic">${item.remarks || 'No remarks recorded.'}</div>
+                                    <div class="mt-4 no-print"><textarea onchange="app.updateItemRemarks(${idx}, this.value)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'" class="w-full border border-slate-100 rounded-lg p-3 text-sm focus:ring-1 focus:ring-teal-500 outline-none resize-none" placeholder="Observations..." rows="2">${item.remarks}</textarea></div>
+                                    <div class="hidden print:block text-[10px] text-slate-500 mt-1 italic whitespace-pre-wrap break-words leading-snug">${item.remarks || 'No remarks recorded.'}</div>
                                     ${isBOH ? `<div class="mt-4 flex gap-2 overflow-x-auto print:flex-wrap print:mt-1">${photos}</div>` : ''}
                                 </div>
                                 <div class="no-print flex flex-col gap-2 min-w-[150px]">
