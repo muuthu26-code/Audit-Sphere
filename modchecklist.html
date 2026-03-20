@@ -38,8 +38,14 @@
             .print\:text-\[10px\] { font-size: 10px !important; }
             * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
             .print-feedback { display: block !important; }
+            .screen-only { display: none !important; }
         }
         
+        /* hide feedback div on screen; show in preview & print */
+        .print-feedback { display: none; }
+        body.preview-mode .print-feedback { display: block !important; }
+        body.preview-mode .screen-only { display: none !important; }
+
         body.preview-mode .no-print { display: none !important; }
         body.preview-mode .print-only { display: block !important; }
         body.preview-mode #exit-preview-btn { display: flex !important; }
@@ -673,7 +679,12 @@
                         } else {
                         gridHtml = `
                             <div class="mt-4 overflow-x-auto">
-                                <table class="w-full border-collapse border border-slate-200 text-xs">
+                                <table class="w-full border-collapse border border-slate-200 text-xs" style="table-layout:fixed;">
+                                    <colgroup>
+                                        <col style="width:22%">
+                                        <col style="width:15%">
+                                        <col style="width:63%">
+                                    </colgroup>
                                     <thead>
                                         <tr class="bg-slate-50 print:bg-slate-100">
                                             <th class="border border-slate-200 p-2 text-left font-black uppercase">${col1}</th>
@@ -689,9 +700,9 @@
                                 <tr class="print:border-b">
                                     <td class="border border-slate-200 p-0 print:p-1"><input type="text" value="${d[keys[0]]}" ${isReadOnlyCol1?'readonly':''} placeholder="---" class="w-full p-2 grid-input print:text-[10px] ${isReadOnlyCol1?'bg-slate-50 font-bold':''}" onchange="app.${updateFnName}(${dIdx}, '${keys[0]}', this.value)"></td>
                                     <td class="border border-slate-200 p-0 print:p-1"><input type="${inputTypeCol2}" value="${d[keys[1]]}" placeholder="---" class="w-full p-2 grid-input print:text-[10px]" onchange="app.${updateFnName}(${dIdx}, '${keys[1]}', this.value)"></td>
-                                    <td class="border border-slate-200 p-0 print:p-1 print:align-top">
-                                        <textarea placeholder="---" rows="2" class="no-print w-full p-2 grid-input text-xs resize-none focus:outline-none" onchange="app.${updateFnName}(${dIdx}, '${keys[2]}', this.value)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${d[keys[2]]}</textarea>
-                                        <div class="print-feedback" style="display:none" class="text-[10px] p-1 whitespace-pre-wrap break-words leading-snug min-h-[1.5rem]">${d[keys[2]] || '---'}</div>
+                                    <td class="border border-slate-200 p-0 print:p-1" style="vertical-align:top;">
+                                        <textarea placeholder="---" rows="2" class="screen-only w-full p-2 grid-input text-xs resize-none focus:outline-none" onchange="app.${updateFnName}(${dIdx}, '${keys[2]}', this.value)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${d[keys[2]]}</textarea>
+                                        <div class="print-feedback" style="font-size:10px; padding:2px; white-space:pre-wrap; word-break:break-word; line-height:1.4; min-height:1.2rem;">${d[keys[2]] || '---'}</div>
                                     </td>
                                 </tr>
                             `;
