@@ -37,6 +37,7 @@
             .print\:h-20 { height: 5rem !important; }
             .print\:text-\[10px\] { font-size: 10px !important; }
             * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
+            .print-feedback { display: block !important; }
         }
         
         body.preview-mode .no-print { display: none !important; }
@@ -690,7 +691,7 @@
                                     <td class="border border-slate-200 p-0 print:p-1"><input type="${inputTypeCol2}" value="${d[keys[1]]}" placeholder="---" class="w-full p-2 grid-input print:text-[10px]" onchange="app.${updateFnName}(${dIdx}, '${keys[1]}', this.value)"></td>
                                     <td class="border border-slate-200 p-0 print:p-1 print:align-top">
                                         <textarea placeholder="---" rows="2" class="no-print w-full p-2 grid-input text-xs resize-none focus:outline-none" onchange="app.${updateFnName}(${dIdx}, '${keys[2]}', this.value)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${d[keys[2]]}</textarea>
-                                        <div class="hidden print:block text-[10px] p-1 whitespace-pre-wrap break-words leading-snug min-h-[1.5rem]">${d[keys[2]] || ''}</div>
+                                        <div class="print-feedback" style="display:none" class="text-[10px] p-1 whitespace-pre-wrap break-words leading-snug min-h-[1.5rem]">${d[keys[2]] || '---'}</div>
                                     </td>
                                 </tr>
                             `;
@@ -725,7 +726,7 @@
                                         <p class="text-sm font-bold text-slate-800 print:text-[11px] leading-relaxed">${question}</p>
                                     </div>
                                     <div class="mt-4 no-print"><textarea onchange="app.updateItemRemarks(${idx}, this.value)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'" class="w-full border border-slate-100 rounded-lg p-3 text-sm focus:ring-1 focus:ring-teal-500 outline-none resize-none" placeholder="Observations..." rows="2">${item.remarks}</textarea></div>
-                                    <div class="hidden print:block text-[10px] text-slate-500 mt-1 italic whitespace-pre-wrap break-words leading-snug">${item.remarks || 'No remarks recorded.'}</div>
+                                    <div class="print-feedback" style="display:none; font-size:10px; color:#64748b; margin-top:4px; font-style:italic; white-space:pre-wrap; word-break:break-word; line-height:1.4;">${item.remarks || 'No remarks recorded.'}</div>
                                     ${isBOH ? `<div class="mt-4 flex gap-2 overflow-x-auto print:flex-wrap print:mt-1">${photos}</div>` : ''}
                                 </div>
                                 <div class="no-print flex flex-col gap-2 min-w-[150px]">
