@@ -599,11 +599,14 @@
 
                 let checklistHTML = '';
                 let currentCat = '';
-                this.checklistItems.forEach((item, idx) => {
+                AUDIT_QUESTIONS.forEach((q, idx) => {
+                    const bracketMatch = q.match(/^\[([^\]]+)\]\s*(.*)/);
+                    const cat = bracketMatch ? bracketMatch[1] : 'General';
+                    const label = bracketMatch ? bracketMatch[2] : q;
                     const state = r.items[idx] || { status: null, remarks: '' };
-                    if (item.category !== currentCat) {
-                        currentCat = item.category;
-                        checklistHTML += `<div style="background:#0f766e;color:white;padding:8px 16px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-top:16px;">${item.category}</div>`;
+                    if (cat !== currentCat) {
+                        currentCat = cat;
+                        checklistHTML += `<div style="background:#0f766e;color:white;padding:8px 16px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-top:16px;">${cat}</div>`;
                     }
                     const statusColor = state.status === 'compliant' ? '#0d9488' : state.status === 'non-compliant' ? '#ef4444' : state.status === 'na' ? '#64748b' : '#e2e8f0';
                     const statusText = state.status === 'compliant' ? '✓ Compliant' : state.status === 'non-compliant' ? '✗ Non-Compliant' : state.status === 'na' ? '— N/A' : 'Not Set';
@@ -611,7 +614,7 @@
                     const photos = (state.photos || []).map(p => `<img src="${p}" onclick="openLB(this.src)" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;cursor:zoom-in;margin:4px;" title="Tap to enlarge">`).join('');
                     checklistHTML += `<div style="background:white;border:1px solid #e2e8f0;border-top:none;padding:12px 16px;">
                         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
-                            <div style="flex:1;font-size:12px;font-weight:600;color:#1e293b;">${idx + 1}. ${item.label}</div>
+                            <div style="flex:1;font-size:12px;font-weight:600;color:#1e293b;">${idx + 1}. ${label}</div>
                             <div style="font-size:11px;font-weight:700;color:${statusTextColor};background:${statusColor};padding:3px 10px;border-radius:20px;white-space:nowrap;">${statusText}</div>
                         </div>
                         ${state.remarks ? `<div style="font-size:11px;color:#64748b;margin-top:6px;padding:6px 10px;background:#f8fafc;border-radius:6px;">${state.remarks}</div>` : ''}
@@ -740,13 +743,15 @@ ${r.meta.observation || generalPhotos ? `<div class="card" style="margin-top:16p
             },
 
             renderChecklist() {
+                try {
                 const r = this.getCurrentReport();
+                if (!r) return;
                 const container = document.getElementById('checklist-container');
                 container.innerHTML = '';
                 let currentCat = '';
 
                 AUDIT_QUESTIONS.forEach((q, idx) => {
-                    const item = r.items[idx];
+                    const item = r.items[idx] || { status: null, remarks: '', photos: [] };
                     const cat = q.match(/\[(.*?)\]/)[1];
                     const question = q.replace(/\[(.*?)\]\s*/, '');
                     const isBOH = cat === "Back of the House";
@@ -878,7 +883,9 @@ ${r.meta.observation || generalPhotos ? `<div class="card" style="margin-top:16p
                     }
                     container.appendChild(row);
                 });
-            }
+                } catch(e) { console.error("renderChecklist error:", e); }
+            },
+
         };
 
         window.onload = () => app.init();
