@@ -19,81 +19,55 @@
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        @page {
-            size: A4;
-            margin: 15mm;
-        }
-
         @media print {
-            /* Fix for multi-page cutting issues */
-            html, body { 
-                height: auto !important; 
-                overflow: visible !important; 
-                background-color: white !important; 
-                color: black !important; 
-                font-size: 10pt !important;
-            }
-            
-            #editor-view { 
-                display: block !important; 
-                width: 100% !important; 
-                padding: 0 !important; 
-                margin: 0 !important;
-                overflow: visible !important;
-            }
-
-            /* Force display of background colors (Teal headers, etc) */
-            * {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-
+            body { background-color: white !important; color: black !important; font-size: 10px !important; line-height: 1.2 !important; }
             .no-print { display: none !important; }
             .print-only { display: block !important; }
             .print-border { border: 1px solid #e5e7eb !important; }
-            .avoid-break { page-break-inside: avoid; break-inside: avoid; }
-
-            /* Critical fix: Flexbox often breaks pagination. Use block for print. */
-            .flex, .grid { display: block !important; }
+            .avoid-break { page-break-inside: avoid; }
             
-            /* Restore specific flex needs that don't break pages */
-            .print-flex-row { display: flex !important; flex-direction: row !important; align-items: center; justify-content: space-between; }
-
             input, textarea, select { 
                 border: none !important; 
                 background: transparent !important;
                 resize: none !important;
                 padding: 0 !important;
                 appearance: none;
-                width: 100% !important;
             }
-
-            #dashboard-view, #exit-preview-btn, #photo-lightbox { display: none !important; }
+            .print\:w-20 { width: 5rem !important; }
+            .print\:h-20 { height: 5rem !important; }
+            .print\:text-\[10px\] { font-size: 10px !important; }
+            .print\:min-w-0 { min-width: 0 !important; }
+            * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
         }
         
         body.preview-mode .no-print { display: none !important; }
         body.preview-mode .print-only { display: block !important; }
         body.preview-mode #exit-preview-btn { display: flex !important; }
 
-        .status-btn.selected-compliant { background-color: #0d9488 !important; color: white !important; border-color: #0d9488 !important; }
-        .status-btn.selected-non-compliant { background-color: #ef4444 !important; color: white !important; border-color: #ef4444 !important; }
-        .status-btn.selected-na { background-color: #64748b !important; color: white !important; border-color: #64748b !important; }
+        .status-btn.selected-compliant { background-color: #0d9488; color: white; border-color: #0d9488; }
+        .status-btn.selected-non-compliant { background-color: #ef4444; color: white; border-color: #ef4444; }
+        .status-btn.selected-na { background-color: #64748b; color: white; border-color: #64748b; }
         
         .grid-input { border-bottom: 1px solid #f1f5f9; transition: border-color 0.2s; }
         .grid-input:focus { border-color: #0d9488; outline: none; }
 
+        /* Lightbox */
         #photo-lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center; cursor:zoom-out; }
         #photo-lightbox.open { display:flex; }
-        #photo-lightbox img { max-width:94vw; max-height:94vh; object-fit:contain; border-radius:6px; animation:lbIn .15s ease; }
+        #photo-lightbox img { max-width:94vw; max-height:94vh; object-fit:contain; border-radius:6px; box-shadow:0 0 60px rgba(0,0,0,0.8); animation:lbIn .15s ease; }
         @keyframes lbIn { from{transform:scale(0.85);opacity:0} to{transform:scale(1);opacity:1} }
+        #photo-lightbox-close { position:absolute; top:16px; right:20px; color:#fff; font-size:2rem; cursor:pointer; line-height:1; font-weight:700; }
+        @media print { #photo-lightbox { display:none !important; } }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
 
+    <!-- Exit Preview Floating Button -->
     <button id="exit-preview-btn" onclick="app.togglePreview()" class="fixed bottom-8 right-8 bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl font-bold z-50 hidden items-center gap-2">
         <i class="fa-solid fa-eye-slash"></i> Exit Preview
     </button>
 
+    <!-- Dashboard View -->
     <div id="dashboard-view" class="max-w-5xl mx-auto p-4 sm:p-6">
         <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 mt-4 gap-4">
             <div>
@@ -113,114 +87,141 @@
                 <h2 class="font-bold text-slate-700 uppercase tracking-wider text-sm">Recent Audits</h2>
             </div>
             <ul id="report-list" class="divide-y divide-slate-100"></ul>
-            <div id="empty-state" class="p-10 text-center text-slate-400 hidden">
+            <div id="empty-state" class="p-10 sm:p-20 text-center text-slate-400 hidden">
                 <i class="fa-solid fa-folder-open text-5xl mb-4 opacity-20"></i>
                 <p>No audit reports found.</p>
             </div>
         </div>
     </div>
 
-    <div id="editor-view" class="max-w-5xl mx-auto p-3 sm:p-6 hidden print:block">
+    <!-- Editor View -->
+    <div id="editor-view" class="max-w-5xl mx-auto p-3 sm:p-6 hidden print:p-0 print:max-w-none print:block">
         
+        <!-- Navigation / Size Monitor -->
         <div class="no-print flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 bg-white p-4 rounded-2xl shadow-sm border border-slate-200 sticky top-4 z-40 gap-4">
             <div class="flex flex-col">
-                <button onclick="app.showDashboard()" class="text-slate-500 hover:text-slate-800 flex items-center gap-2 font-bold text-sm transition-colors mb-1">
+                <button onclick="app.showDashboard()" class="text-slate-500 hover:text-slate-800 flex items-center gap-2 font-bold text-sm transition-colors mb-1 w-fit">
                     <i class="fa-solid fa-chevron-left"></i> Dashboard
                 </button>
                 <div id="report-size-badge" class="text-[10px] font-black px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 border border-slate-200 uppercase w-fit">
                     Storage Used: 0.0 MB
                 </div>
             </div>
-            <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-                <button onclick="app.togglePreview()" class="bg-slate-100 hover:bg-teal-50 text-slate-700 px-4 py-2 rounded-lg font-bold flex-1 sm:flex-none flex items-center justify-center gap-2 border border-slate-200">
+            <div class="flex flex-col sm:flex-row flex-wrap gap-2 w-full sm:w-auto">
+                <button onclick="app.togglePreview()" class="bg-slate-100 hover:bg-teal-50 text-slate-700 px-4 py-2 rounded-lg font-bold flex-1 sm:flex-none flex items-center justify-center gap-2 border border-slate-200 transition-colors">
                     <i class="fa-solid fa-eye"></i> Preview
                 </button>
-                <button onclick="window.print()" class="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2 rounded-lg font-bold flex-1 sm:flex-none flex items-center justify-center gap-2 shadow-md">
+                <button onclick="window.print()" class="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2 rounded-lg font-bold flex-1 sm:flex-none flex items-center justify-center gap-2 shadow-md transition-colors">
                     <i class="fa-solid fa-file-pdf"></i> Export PDF
-                </button>
-                <button onclick="app.exportInteractiveHTML()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold flex-1 sm:flex-none flex items-center justify-center gap-2 shadow-md">
-                    <i class="fa-solid fa-share-nodes"></i> Share Report
                 </button>
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-8 mb-6 print-border print:p-4">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 print:grid-cols-3 print:gap-4">
-                <div class="lg:col-span-1">
+        <!-- Metadata Header -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-8 mb-6 print-border print:p-2 print:mb-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 print:gap-2">
+                <div class="sm:col-span-2 lg:col-span-1">
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">MOD Name</label>
-                    <input type="text" id="meta-modName" placeholder="Enter Name" class="w-full border-b-2 border-slate-100 py-1 focus:border-teal-500 bg-transparent font-bold text-slate-800 no-print" onchange="app.updateMeta('modName', this.value)">
-                    <div class="hidden print-only font-bold text-slate-800 py-1 border-b border-slate-100">---</div>
+                    <input type="text" id="meta-modName" placeholder="Enter Name" class="w-full border-b-2 border-slate-100 py-1 focus:border-teal-500 bg-transparent font-bold text-slate-800 no-print" oninput="this.nextElementSibling.textContent = this.value || '---'" onchange="app.updateMeta('modName', this.value)">
+                    <div class="hidden print-only font-bold text-slate-800 py-1 border-b border-slate-100 break-words"></div>
                 </div>
                 <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Day</label>
-                    <input type="text" id="meta-day" placeholder="Monday" class="w-full border-b-2 border-slate-100 py-1 focus:border-teal-500 bg-transparent font-bold text-slate-800 no-print" onchange="app.updateMeta('day', this.value)">
-                    <div class="hidden print-only font-bold text-slate-800 py-1 border-b border-slate-100">---</div>
+                    <input type="text" id="meta-day" placeholder="e.g. Monday" class="w-full border-b-2 border-slate-100 py-1 focus:border-teal-500 bg-transparent font-bold text-slate-800 no-print" oninput="this.nextElementSibling.textContent = this.value || '---'" onchange="app.updateMeta('day', this.value)">
+                    <div class="hidden print-only font-bold text-slate-800 py-1 border-b border-slate-100 break-words"></div>
                 </div>
                 <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Date</label>
-                    <input type="date" id="meta-date" class="w-full border-b-2 border-slate-100 py-1 focus:border-teal-500 bg-transparent font-bold text-slate-800 no-print" onchange="app.updateMeta('date', this.value)">
-                    <div class="hidden print-only font-bold text-slate-800 py-1 border-b border-slate-100">---</div>
+                    <input type="date" id="meta-date" class="w-full border-b-2 border-slate-100 py-1 focus:border-teal-500 bg-transparent font-bold text-slate-800 no-print" oninput="this.nextElementSibling.textContent = this.value || '---'" onchange="app.updateMeta('date', this.value)">
+                    <div class="hidden print-only font-bold text-slate-800 py-1 border-b border-slate-100 break-words"></div>
                 </div>
                 <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Time In</label>
-                    <input type="time" id="meta-timeIn" class="w-full border-b-2 border-slate-100 py-1 focus:border-teal-500 bg-transparent font-bold text-slate-800 no-print" onchange="app.updateMeta('timeIn', this.value)">
-                    <div class="hidden print-only font-bold text-slate-800 py-1 border-b border-slate-100">---</div>
+                    <input type="time" id="meta-timeIn" class="w-full border-b-2 border-slate-100 py-1 focus:border-teal-500 bg-transparent font-bold text-slate-800 no-print" oninput="this.nextElementSibling.textContent = this.value || '---'" onchange="app.updateMeta('timeIn', this.value)">
+                    <div class="hidden print-only font-bold text-slate-800 py-1 border-b border-slate-100 break-words"></div>
                 </div>
                 <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Time Out</label>
-                    <input type="time" id="meta-timeOut" class="w-full border-b-2 border-slate-100 py-1 focus:border-teal-500 bg-transparent font-bold text-slate-800 no-print" onchange="app.updateMeta('timeOut', this.value)">
-                    <div class="hidden print-only font-bold text-slate-800 py-1 border-b border-slate-100">---</div>
+                    <input type="time" id="meta-timeOut" class="w-full border-b-2 border-slate-100 py-1 focus:border-teal-500 bg-transparent font-bold text-slate-800 no-print" oninput="this.nextElementSibling.textContent = this.value || '---'" onchange="app.updateMeta('timeOut', this.value)">
+                    <div class="hidden print-only font-bold text-slate-800 py-1 border-b border-slate-100 break-words"></div>
                 </div>
             </div>
         </div>
 
-        <div id="checklist-container" class="space-y-4 print:space-y-0"></div>
+        <!-- Dynamic Checklist Sections -->
+        <div id="checklist-container" class="space-y-4 sm:space-y-6 print:space-y-2"></div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-8 mt-8 print-border print:p-4 avoid-break">
-            <div class="flex justify-between items-center mb-4">
+        <!-- Overall Summary -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-8 mt-6 sm:mt-8 print-border print:p-2 print:mt-4 avoid-break">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
                 <h3 class="text-lg font-bold text-slate-900">General Audit Observation</h3>
-                <button onclick="app.triggerGeneralPhotoUpload()" class="no-print bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-colors">
+                <button onclick="app.triggerGeneralPhotoUpload()" class="no-print bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 w-full sm:w-auto justify-center transition-colors">
                     <i class="fa-solid fa-camera"></i> Summary Photos
                 </button>
             </div>
-            <textarea id="meta-observation" rows="4" placeholder="Summarize your findings..." class="w-full border border-slate-200 rounded-xl p-4 focus:ring-2 focus:ring-teal-500 outline-none no-print" onchange="app.updateMeta('observation', this.value)"></textarea>
-            <div id="print-meta-observation" class="hidden print-only text-sm whitespace-pre-wrap border border-slate-100 p-4 rounded bg-slate-50 font-medium">---</div>
+            <textarea id="meta-observation" rows="4" placeholder="Summarize your findings for the day..." class="w-full border border-slate-200 rounded-xl p-4 focus:ring-2 focus:ring-teal-500 outline-none no-print transition-shadow" oninput="document.getElementById('print-meta-observation').textContent = this.value || '---'" onchange="app.updateMeta('observation', this.value)"></textarea>
+            <div id="print-meta-observation" class="hidden print-only text-[11px] whitespace-pre-wrap border border-slate-100 p-3 rounded min-h-[3rem] mt-2 bg-slate-50 font-medium"></div>
             
-            <div id="general-photos-container" class="mt-4 flex gap-3 overflow-x-auto pb-2 hide-scrollbar print:flex-wrap"></div>
+            <div id="general-photos-container" class="mt-4 flex gap-2 overflow-x-auto pb-2 hide-scrollbar print:flex-wrap print:overflow-visible"></div>
         </div>
 
+        <!-- Global Inputs -->
         <input type="file" id="item-photo-upload" accept="image/*" multiple class="hidden" onchange="app.handleItemPhotoUpload(event)">
         <input type="file" id="general-photo-upload" accept="image/*" multiple class="hidden" onchange="app.handleGeneralPhotoUpload(event)">
     </div>
 
+    <!-- Photo Lightbox -->
     <div id="photo-lightbox" onclick="this.classList.remove('open')">
+        <span id="photo-lightbox-close" onclick="document.getElementById('photo-lightbox').classList.remove('open')">&times;</span>
         <img id="photo-lightbox-img" src="" alt="Photo Evidence">
     </div>
 
     <script>
+        "use strict";
+
+        // Native IndexedDB Wrapper to entirely bypass localStorage's 5MB limitation without dependencies
         const dbUtils = {
             dbName: 'HotelModAuditDB',
             storeName: 'auditData',
-            async init() {
-                return new Promise((resolve) => {
+            
+            init() {
+                return new Promise((resolve, reject) => {
                     const req = indexedDB.open(this.dbName, 1);
-                    req.onupgradeneeded = (e) => e.target.result.createObjectStore(this.storeName);
+                    req.onerror = () => reject(req.error);
                     req.onsuccess = (e) => resolve(e.target.result);
+                    req.onupgradeneeded = (e) => {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains(this.storeName)) {
+                            db.createObjectStore(this.storeName);
+                        }
+                    };
                 });
             },
+            
             async get(key) {
-                const db = await this.init();
-                return new Promise((resolve) => {
-                    const req = db.transaction(this.storeName).objectStore(this.storeName).get(key);
-                    req.onsuccess = () => resolve(req.result);
-                });
+                try {
+                    const db = await this.init();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction(this.storeName, 'readonly');
+                        const store = tx.objectStore(this.storeName);
+                        const req = store.get(key);
+                        req.onsuccess = () => resolve(req.result);
+                        req.onerror = () => reject(req.error);
+                    });
+                } catch(e) { return null; }
             },
+            
             async set(key, value) {
-                const db = await this.init();
-                return new Promise((resolve) => {
-                    const req = db.transaction(this.storeName, 'readwrite').objectStore(this.storeName).put(value, key);
-                    req.onsuccess = () => resolve(true);
-                });
+                try {
+                    const db = await this.init();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction(this.storeName, 'readwrite');
+                        const store = tx.objectStore(this.storeName);
+                        const req = store.put(value, key);
+                        req.onsuccess = () => resolve(true);
+                        req.onerror = () => reject(req.error);
+                    });
+                } catch(e) { return false; }
             }
         };
 
@@ -229,11 +230,12 @@
             document.getElementById('photo-lightbox').classList.add('open');
         }
 
+        // Structured Audit Questions Sequence
         const AUDIT_QUESTIONS = Object.freeze([
-            "[Guest Interaction] Please speak to three (3) guests",
-            "[Staff Interaction] Please speak to three (3) staff members",
+            "[Guest Interaction] Please speak to three (3) guests/indicate Name/Room Number and Feedback",
+            "[Staff Interaction] Please speak to three (3) staff members from three different departments",
             "[General Areas] Main Entrance",
-            "[General Areas] Porch Arrival Observation",
+            "[General Areas] Porch Arrival Observation (Standard check)",
             "[General Areas] Front Desk",
             "[General Areas] Check-In Process Observation",
             "[General Areas] Communication Centre",
@@ -260,22 +262,22 @@
             "[Food & Beverage] Banquets (Mehfil & Mehfil Lawn)",
             "[Cover Tally Check] Outlet Cover Tally",
             "[Employee Facilities] Samovar Standards Compliance",
-            "[Employee Facilities] Plates/Cutlery drying",
-            "[Employee Facilities] Table/Chairs arrangement",
+            "[Employee Facilities] Plates/Cutlery drying - Samovar",
+            "[Employee Facilities] Table/Chairs arrangement - Samovar",
             "[Employee Facilities] Ladies drop",
             "[Back of the House] Locker Rooms",
             "[Back of the House] Bakery",
             "[Back of the House] Commissary",
             "[Back of the House] Grinder Room",
             "[Back of the House] Walk-In Freezers (Basement)",
-            "[Back of the House] Samovar kitchen and store", 
+            "[Back of the House] Samovar kitchen and store area", 
             "[Back of the House] Back of house corridors", 
             "[Back of the House] Main Kitchen Store", 
             "[Back of the House] Main Kitchen",
             "[Back of the House] Stewarding areas",
             "[Back of the House] D-Bar",
-            "[Back of the House] Mysouth Kitchen",
-            "[Back of the House] Myst Kitchen",
+            "[Back of the House] Mysouth Kitchen and store Area",
+            "[Back of the House] Myst Kitchen and store area",
             "[Back of the House] Service Floor",
             "[Back of the House] Staff Entrance",
             "[Back of the House] Garbage area",
@@ -284,13 +286,13 @@
             "[Back of the House] Basement Parking Area",
             "[Back of the House] Dock Level", 
             "[Back of the House] Drivers Restroom",
-            "[Floors] Floor Cleanliness & Pantries",
+            "[Floors] Floor Cleanliness & Pantries (IRD Trays)",
             "[Room Checks] Room Thorough Check 1",
             "[Room Checks] Room Thorough Check 2",
             "[Fire Life Safety] Incidents Logged",
             "[Fire Life Safety] Fire Escape Routes Clear",
             "[Fire Life Safety] Kitchen/BOH Hazards",
-            "[Test Calls] Test Calls Response"
+            "[Test Calls] Test Calls Response (Rings count)"
         ]);
 
         const app = {
@@ -298,24 +300,57 @@
             currentReportId: null,
 
             async init() {
-                let stored = await dbUtils.get('reportsV9');
-                if (!stored) {
-                    const legacy = localStorage.getItem('hotelModAuditsV7');
-                    if (legacy) stored = JSON.parse(legacy);
+                try {
+                    // Try to fetch from new high-capacity IndexedDB first
+                    let stored = await dbUtils.get('reportsV8');
+                    
+                    // If empty, automatically migrate data from old 5MB localStorage
+                    if (!stored) {
+                        const oldStored = localStorage.getItem('hotelModAuditsV7');
+                        if (oldStored) {
+                            stored = JSON.parse(oldStored);
+                            await dbUtils.set('reportsV8', stored);
+                        }
+                    }
+                    
+                    if (stored) this.reports = stored;
+                } catch (e) { 
+                    console.warn("Storage blocked.", e); 
                 }
-                if (stored) this.reports = stored;
+                
                 this.renderDashboard();
             },
 
-            async save() {
-                await dbUtils.set('reportsV9', this.reports);
-                this.updateSizeIndicator();
+            async saveToLocal() {
+                try {
+                    // Keep a mirrored backup in legacy localStorage if it fits, ignore errors if it doesn't
+                    try { localStorage.setItem('hotelModAuditsV7', JSON.stringify(this.reports)); } catch(e){}
+                    
+                    // Save to the massive IndexedDB
+                    const success = await dbUtils.set('reportsV8', this.reports);
+                    this.updateSizeIndicator();
+                    return success;
+                } catch (e) {
+                    console.error("Storage error:", e);
+                    return false;
+                }
             },
 
             updateSizeIndicator() {
-                const sizeMB = (JSON.stringify(this.reports).length / (1024 * 1024)).toFixed(2);
+                const reportString = JSON.stringify(this.reports);
+                const sizeMB = (reportString.length / (1024 * 1024)).toFixed(2);
                 const badge = document.getElementById('report-size-badge');
-                if (badge) badge.textContent = `Storage: ${sizeMB} MB`;
+                if (badge) {
+                    // IndexedDB easily supports 50-100MB+, so warnings trigger much later
+                    badge.textContent = `Storage Used: ${sizeMB} MB`;
+                    if (sizeMB > 40.0) {
+                        badge.className = "text-[10px] font-black px-2 py-0.5 rounded-md bg-red-100 text-red-600 border border-red-200 uppercase w-fit";
+                    } else if (sizeMB > 25.0) {
+                        badge.className = "text-[10px] font-black px-2 py-0.5 rounded-md bg-amber-100 text-amber-600 border border-amber-200 uppercase w-fit";
+                    } else {
+                        badge.className = "text-[10px] font-black px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 border border-slate-200 uppercase w-fit";
+                    }
+                }
             },
 
             showDashboard() {
@@ -326,21 +361,43 @@
             },
 
             createNewReport() {
-                const report = {
+                const newReport = {
                     id: Date.now().toString(),
                     meta: { date: new Date().toISOString().split('T')[0], day: '', modName: '', timeIn: '', timeOut: '', observation: '' },
                     generalPhotos: [],
                     items: {}
                 };
-                AUDIT_QUESTIONS.forEach((q, i) => {
-                    report.items[i] = { status: null, remarks: '', photos: [] };
-                    if ([0, 1, 5].includes(i)) report.items[i].grid = [{c1:'', c2:'', c3:''},{c1:'', c2:'', c3:''},{c1:'', c2:'', c3:''}];
-                    if (i === 28) report.items[i].grid = [{c1:'Tattva', c2:'', c3:''}, {c1:'Spring', c2:'', c3:''}];
-                    if (i === 32) report.items[i].grid = [{c1:'1st Drop', c2:'', c3:''}, {c1:'2nd Drop', c2:'', c3:''}];
+                AUDIT_QUESTIONS.forEach((q, idx) => { 
+                    newReport.items[idx] = { status: null, remarks: '', photos: [] };
+                    if (idx === 0) {
+                        newReport.items[idx].guestData = [
+                            { name: '', room: '', feedback: '' }, { name: '', room: '', feedback: '' }, { name: '', room: '', feedback: '' }
+                        ];
+                    }
+                    if (idx === 1) {
+                        newReport.items[idx].staffData = [
+                            { name: '', dept: '', remarks: '' }, { name: '', dept: '', remarks: '' }, { name: '', dept: '', remarks: '' }
+                        ];
+                    }
+                    if (idx === 5) {
+                        newReport.items[idx].checkInData = [
+                            { name: '', room: '', feedback: '' }, { name: '', room: '', feedback: '' }, { name: '', room: '', feedback: '' }
+                        ];
+                    }
+                    if (idx === 28) {
+                        newReport.items[idx].tallyData = [
+                            { outlet: 'Tattva Spa', morning: '', evening: '' }, { outlet: 'Restaurant', morning: '', evening: '' }
+                        ];
+                    }
+                    if (idx === 32) {
+                        newReport.items[idx].dropData = [
+                            { label: '1st Drop', time1: '', time2: '' }, { label: '2nd Drop', time1: '', time2: '' }
+                        ];
+                    }
                 });
-                this.reports.unshift(report);
-                this.currentReportId = report.id;
-                this.save();
+                this.reports.unshift(newReport);
+                this.currentReportId = newReport.id;
+                this.saveToLocal();
                 this.renderEditor();
                 document.getElementById('dashboard-view').classList.add('hidden');
                 document.getElementById('editor-view').classList.remove('hidden');
@@ -353,123 +410,250 @@
                 document.getElementById('editor-view').classList.remove('hidden');
             },
 
+            deleteReport(id, event) {
+                event.stopPropagation();
+                if(confirm("Permanently delete this audit?")) {
+                    this.reports = this.reports.filter(r => r.id !== id);
+                    this.saveToLocal();
+                    this.renderDashboard();
+                }
+            },
+
             getCurrentReport() { return this.reports.find(r => r.id === this.currentReportId); },
 
-            updateMeta(f, v) {
-                const r = this.getCurrentReport();
-                r.meta[f] = v;
-                const printEl = document.getElementById(f === 'observation' ? 'print-meta-observation' : `meta-${f}`).nextElementSibling;
-                if (printEl && printEl.classList.contains('print-only')) printEl.textContent = v || '---';
-                if (f === 'observation') document.getElementById('print-meta-observation').textContent = v || '---';
-                this.save();
+            updateMeta(field, value) {
+                const report = this.getCurrentReport();
+                if (report) {
+                    report.meta[field] = value;
+                    if (field === 'observation') {
+                        const obsEl = document.getElementById('print-meta-observation');
+                        if (obsEl) obsEl.textContent = value || '---';
+                    } else {
+                        const el = document.getElementById(`meta-${field}`);
+                        if(el && el.nextElementSibling && el.nextElementSibling.classList.contains('print-only')) {
+                            el.nextElementSibling.textContent = value || '---';
+                        }
+                    }
+                    this.saveToLocal();
+                }
             },
 
-            updateGrid(idx, row, col, val) {
-                const r = this.getCurrentReport();
-                r.items[idx].grid[row][col] = val;
-                this.save();
+            updateGuestInteraction(rowIdx, field, value) {
+                const report = this.getCurrentReport();
+                if (report && report.items[0]) {
+                    if (!report.items[0].guestData) report.items[0].guestData = [{ name: '', room: '', feedback: '' },{ name: '', room: '', feedback: '' },{ name: '', room: '', feedback: '' }];
+                    report.items[0].guestData[rowIdx][field] = value;
+                    this.saveToLocal();
+                }
             },
 
-            updateStatus(idx, s) {
-                const r = this.getCurrentReport();
-                r.items[idx].status = (r.items[idx].status === s) ? null : s;
-                this.save();
-                this.renderChecklist();
+            updateStaffInteraction(rowIdx, field, value) {
+                const report = this.getCurrentReport();
+                if (report && report.items[1]) {
+                    if (!report.items[1].staffData) report.items[1].staffData = [{ name: '', dept: '', remarks: '' },{ name: '', dept: '', remarks: '' },{ name: '', dept: '', remarks: '' }];
+                    report.items[1].staffData[rowIdx][field] = value;
+                    this.saveToLocal();
+                }
             },
 
-            updateRemarks(idx, v) {
-                this.getCurrentReport().items[idx].remarks = v;
-                this.save();
+            updateCheckInInteraction(rowIdx, field, value) {
+                const report = this.getCurrentReport();
+                if (report && report.items[5]) {
+                    if (!report.items[5].checkInData) report.items[5].checkInData = [{ name: '', room: '', feedback: '' },{ name: '', room: '', feedback: '' },{ name: '', room: '', feedback: '' }];
+                    report.items[5].checkInData[rowIdx][field] = value;
+                    this.saveToLocal();
+                }
             },
 
-            compress(file, cb) {
+            updateTallyInteraction(rowIdx, field, value) {
+                const report = this.getCurrentReport();
+                if (report && report.items[28]) {
+                    if (!report.items[28].tallyData) report.items[28].tallyData = [{ outlet: 'Tattva Spa', morning: '', evening: '' },{ outlet: 'Restaurant', morning: '', evening: '' }];
+                    report.items[28].tallyData[rowIdx][field] = value;
+                    this.saveToLocal();
+                }
+            },
+
+            updateDropInteraction(rowIdx, field, value) {
+                const report = this.getCurrentReport();
+                if (report && report.items[32]) {
+                    if (!report.items[32].dropData) report.items[32].dropData = [{ label: '1st Drop', time1: '', time2: '' },{ label: '2nd Drop', time1: '', time2: '' }];
+                    report.items[32].dropData[rowIdx][field] = value;
+                    this.saveToLocal();
+                }
+            },
+
+            updateItemStatus(index, status) {
+                const report = this.getCurrentReport();
+                if (report) {
+                    report.items[index].status = (report.items[index].status === status) ? null : status;
+                    this.saveToLocal();
+                    this.renderChecklist();
+                }
+            },
+
+            updateItemRemarks(index, value) {
+                const report = this.getCurrentReport();
+                if (report) {
+                    report.items[index].remarks = value;
+                    this.saveToLocal();
+                }
+            },
+
+            // Compresses image for robust, light-weight PDF rendering 
+            compressImage(file, callback) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const img = new Image();
                     img.onload = () => {
-                        const canvas = document.createElement('canvas');
+                        // 800px maintains clarity for evidence while drastically reducing the data footprint
+                        const MAX_SIZE = 800; 
                         let w = img.width, h = img.height;
-                        if (w > 1200) { h *= 1200/w; w = 1200; }
+                        if (w > h) { if (w > MAX_SIZE) { h = Math.round(h * MAX_SIZE / w); w = MAX_SIZE; } }
+                        else       { if (h > MAX_SIZE) { w = Math.round(w * MAX_SIZE / h); h = MAX_SIZE; } }
+
+                        const canvas = document.createElement('canvas');
                         canvas.width = w; canvas.height = h;
-                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                        cb(canvas.toDataURL('image/jpeg', 0.7));
+                        const ctx = canvas.getContext('2d');
+                        ctx.imageSmoothingEnabled = true;
+                        ctx.imageSmoothingQuality = 'high';
+                        ctx.drawImage(img, 0, 0, w, h);
+
+                        // Output at 60% quality which is ideal for standard documentation
+                        callback(canvas.toDataURL('image/jpeg', 0.6));
                     };
                     img.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
             },
 
-            handleItemPhotoUpload(e) {
-                const r = this.getCurrentReport();
-                Array.from(e.target.files).forEach(f => this.compress(f, b64 => {
-                    r.items[this.upIdx].photos.push(b64);
-                    this.save();
-                    this.renderChecklist();
-                }));
+            currentUploadIndex: null,
+            triggerPhotoUpload(index) { this.currentUploadIndex = index; document.getElementById('item-photo-upload').click(); },
+
+            handleItemPhotoUpload(event) {
+                const files = Array.from(event.target.files);
+                const input = event.target;
+                const report = this.getCurrentReport();
+                let pending = files.length;
+                if (pending === 0) return;
+                
+                files.forEach(file => {
+                    this.compressImage(file, async (base64) => {
+                        pending--;
+                        if (!report.items[this.currentUploadIndex].photos) report.items[this.currentUploadIndex].photos = [];
+                        report.items[this.currentUploadIndex].photos.push(base64);
+                        
+                        // Wait for IndexedDB save logic
+                        await this.saveToLocal();
+                        this.renderChecklist();
+                        
+                        if (pending === 0) input.value = '';
+                    });
+                });
             },
 
-            handleGeneralPhotoUpload(e) {
-                const r = this.getCurrentReport();
-                Array.from(e.target.files).forEach(f => this.compress(f, b64 => {
-                    r.generalPhotos.push(b64);
-                    this.save();
-                    this.renderGeneralPhotos();
-                }));
+            removeItemPhoto(itemIdx, photoIdx) {
+                this.getCurrentReport().items[itemIdx].photos.splice(photoIdx, 1);
+                this.saveToLocal();
+                this.renderChecklist();
             },
 
-            togglePreview() { document.body.classList.toggle('preview-mode'); window.scrollTo(0,0); },
+            triggerGeneralPhotoUpload() { document.getElementById('general-photo-upload').click(); },
+
+            handleGeneralPhotoUpload(event) {
+                const files = Array.from(event.target.files);
+                const input = event.target;
+                const report = this.getCurrentReport();
+                let pending = files.length;
+                if (pending === 0) return;
+                
+                files.forEach(file => {
+                    this.compressImage(file, async (base64) => {
+                        pending--;
+                        report.generalPhotos.push(base64);
+                        
+                        await this.saveToLocal();
+                        this.renderGeneralPhotos();
+                        
+                        if (pending === 0) input.value = '';
+                    });
+                });
+            },
+
+            removeGeneralPhoto(idx) {
+                this.getCurrentReport().generalPhotos.splice(idx, 1);
+                this.saveToLocal();
+                this.renderGeneralPhotos();
+            },
+
+            togglePreview() {
+                document.body.classList.toggle('preview-mode');
+                window.scrollTo(0, 0);
+            },
 
             renderDashboard() {
                 const list = document.getElementById('report-list');
-                list.innerHTML = this.reports.map(r => `
-                    <li class="p-6 hover:bg-slate-50 cursor-pointer flex justify-between items-center" onclick="app.openReport('${r.id}')">
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center font-bold">
-                                ${r.meta.date.split('-')[2] || '!!'}
+                const empty = document.getElementById('empty-state');
+                list.innerHTML = '';
+                if (!this.reports.length) { empty.classList.remove('hidden'); return; }
+                empty.classList.add('hidden');
+                this.reports.forEach(r => {
+                    const li = document.createElement('li');
+                    li.className = "p-5 sm:p-6 hover:bg-slate-50 cursor-pointer flex items-center justify-between group transition-all";
+                    li.onclick = () => this.openReport(r.id);
+                    li.innerHTML = `
+                        <div class="flex items-center gap-3 sm:gap-4">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center font-bold text-sm sm:text-base">
+                                ${r.meta.date.split('-')[2]}
                             </div>
                             <div>
-                                <h3 class="font-bold text-slate-800">${r.meta.modName || 'Draft Audit'}</h3>
-                                <p class="text-xs text-slate-400 font-bold uppercase">${r.meta.date} • ${r.meta.day || '---'}</p>
+                                <h3 class="font-bold text-slate-800 text-sm sm:text-base">${r.meta.modName || 'New Audit'}</h3>
+                                <p class="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-widest">${r.meta.date} • ${r.meta.day || '---'}</p>
                             </div>
                         </div>
-                        <button onclick="event.stopPropagation(); app.deleteReport('${r.id}')" class="text-slate-300 hover:text-red-500 transition-colors p-2"><i class="fa-solid fa-trash-can"></i></button>
-                    </li>
-                `).join('');
-                document.getElementById('empty-state').classList.toggle('hidden', this.reports.length > 0);
-            },
-
-            deleteReport(id) {
-                if(confirm("Delete this audit?")) {
-                    this.reports = this.reports.filter(r => r.id !== id);
-                    this.save();
-                    this.renderDashboard();
-                }
+                        <button onclick="app.deleteReport('${r.id}', event)" class="text-slate-300 hover:text-red-500 transition-colors p-2"><i class="fa-solid fa-trash-can"></i></button>
+                    `;
+                    list.appendChild(li);
+                });
             },
 
             renderEditor() {
                 const r = this.getCurrentReport();
-                ['modName', 'day', 'date', 'timeIn', 'timeOut'].forEach(f => {
+                
+                const fields = ['modName', 'day', 'date', 'timeIn', 'timeOut'];
+                fields.forEach(f => {
                     const el = document.getElementById(`meta-${f}`);
-                    el.value = r.meta[f] || '';
-                    el.nextElementSibling.textContent = r.meta[f] || '---';
+                    if (el) {
+                        el.value = r.meta[f] || '';
+                        if (el.nextElementSibling && el.nextElementSibling.classList.contains('print-only')) {
+                            el.nextElementSibling.textContent = r.meta[f] || '---';
+                        }
+                    }
                 });
-                document.getElementById('meta-observation').value = r.meta.observation || '';
-                document.getElementById('print-meta-observation').textContent = r.meta.observation || '---';
+                
+                const obsEl = document.getElementById('meta-observation');
+                if (obsEl) obsEl.value = r.meta.observation || '';
+                
+                const printObsEl = document.getElementById('print-meta-observation');
+                if (printObsEl) printObsEl.textContent = r.meta.observation || '---';
+                
                 this.renderChecklist();
                 this.renderGeneralPhotos();
+                this.updateSizeIndicator();
             },
 
             renderGeneralPhotos() {
                 const r = this.getCurrentReport();
-                document.getElementById('general-photos-container').innerHTML = r.generalPhotos.map((p, i) => `
-                    <div class="relative shrink-0 w-24 h-24 rounded-lg overflow-hidden border border-slate-200">
-                        <img src="${p}" class="w-full h-full object-cover cursor-zoom-in" onclick="openLightbox('${p}')">
-                        <button onclick="app.removeGenPhoto(${i})" class="no-print absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-lg"><i class="fa-solid fa-xmark text-xs"></i></button>
+                const container = document.getElementById('general-photos-container');
+                container.innerHTML = r.generalPhotos.map((p, i) => `
+                    <div class="relative shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-xl border border-slate-200 overflow-hidden print:w-20 print:h-20">
+                        <a href="${p}" target="_blank" onclick="event.preventDefault();openLightbox('${p}')" class="block w-full h-full cursor-zoom-in">
+                            <img src="${p}" class="w-full h-full object-cover">
+                        </a>
+                        <button onclick="app.removeGeneralPhoto(${i})" class="no-print absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-lg"><i class="fa-solid fa-xmark text-[10px]"></i></button>
                     </div>
                 `).join('');
             },
-
-            removeGenPhoto(i) { this.getCurrentReport().generalPhotos.splice(i,1); this.save(); this.renderGeneralPhotos(); },
 
             renderChecklist() {
                 const r = this.getCurrentReport();
@@ -481,65 +665,136 @@
                     const item = r.items[idx];
                     const cat = q.match(/\[(.*?)\]/)[1];
                     const question = q.replace(/\[(.*?)\]\s*/, '');
+                    const isBOH = cat === "Back of the House";
 
                     if (cat !== currentCat) {
-                        const h = document.createElement('div');
-                        h.className = "bg-teal-700 text-white px-6 py-2.5 font-black uppercase text-[10px] tracking-widest print:bg-slate-100 print:text-black print:border-b mt-6";
-                        h.textContent = cat;
-                        container.appendChild(h);
+                        const header = document.createElement('div');
+                        header.className = "bg-teal-700 text-white px-5 sm:px-6 py-2.5 font-black uppercase tracking-widest text-[10px] rounded-t-xl print:bg-slate-100 print:text-black print:border-b print:rounded-none mt-4 sm:mt-6";
+                        header.textContent = cat;
+                        container.appendChild(header);
                         currentCat = cat;
                     }
 
                     const row = document.createElement('div');
-                    row.className = "bg-white border-x border-b border-slate-200 p-6 avoid-break print:p-4";
+                    row.className = "bg-white border-x border-b border-slate-200 p-5 sm:p-6 avoid-break last:rounded-b-2xl print:p-2 print:border-slate-100";
                     
-                    let gridHtml = '';
-                    if (item.grid) {
-                        gridHtml = `<div class="mt-4 border border-slate-200 rounded-lg overflow-hidden"><table class="w-full text-xs">
-                            <tr class="bg-slate-50 border-b border-slate-200">
-                                <th class="p-2 text-left">Detail 1</th><th class="p-2 text-left border-l border-slate-200">Detail 2</th><th class="p-2 text-left border-l border-slate-200">Detail 3</th>
-                            </tr>
-                            ${item.grid.map((g, gi) => `
-                                <tr class="border-b border-slate-100 last:border-none">
-                                    <td class="p-0 border-r border-slate-100"><input value="${g.c1}" onchange="app.updateGrid(${idx}, ${gi}, 'c1', this.value)" class="p-2 w-full no-print bg-transparent"><div class="hidden print-only p-2">${g.c1 || '---'}</div></td>
-                                    <td class="p-0 border-r border-slate-100"><input value="${g.c2}" onchange="app.updateGrid(${idx}, ${gi}, 'c2', this.value)" class="p-2 w-full no-print bg-transparent"><div class="hidden print-only p-2">${g.c2 || '---'}</div></td>
-                                    <td class="p-0"><input value="${g.c3}" onchange="app.updateGrid(${idx}, ${gi}, 'c3', this.value)" class="p-2 w-full no-print bg-transparent"><div class="hidden print-only p-2">${g.c3 || '---'}</div></td>
-                                </tr>`).join('')}
-                        </table></div>`;
-                    }
-
-                    const photos = item.photos.map((p, pi) => `
-                        <div class="relative shrink-0 w-20 h-20 border border-slate-200 rounded overflow-hidden">
-                            <img src="${p}" class="w-full h-full object-cover cursor-zoom-in" onclick="openLightbox('${p}')">
-                            <button onclick="app.remItemPhoto(${idx}, ${pi})" class="no-print absolute top-0 right-0 bg-black/50 text-white w-5 h-5"><i class="fa-solid fa-x"></i></button>
+                    const photos = (item.photos || []).map((p, pi) => `
+                        <div class="relative shrink-0 w-16 h-16 sm:w-20 sm:h-20 border border-slate-200 rounded-lg overflow-hidden print:w-20 print:h-20">
+                            <a href="${p}" target="_blank" onclick="event.preventDefault();openLightbox('${p}')" class="block w-full h-full cursor-zoom-in">
+                                <img src="${p}" class="w-full h-full object-cover">
+                            </a>
+                            <button onclick="app.removeItemPhoto(${idx}, ${pi})" class="no-print absolute top-0.5 right-0.5 bg-black/60 text-white w-5 h-5 rounded-full"><i class="fa-solid fa-xmark text-[10px]"></i></button>
                         </div>
                     `).join('');
 
-                    row.innerHTML = `
-                        <div class="flex flex-col lg:flex-row gap-6">
-                            <div class="flex-1">
-                                <p class="text-sm font-bold text-slate-800"><span class="text-teal-600 mr-2">${idx+1}.</span>${question}</p>
-                                ${gridHtml}
-                                <div class="mt-3 no-print"><textarea onchange="app.updateRemarks(${idx}, this.value)" class="w-full border border-slate-100 rounded p-2 text-sm" placeholder="Remarks..." rows="2">${item.remarks}</textarea></div>
-                                <div class="hidden print-only text-xs mt-2 text-slate-600 italic">${item.remarks || 'No remarks'}</div>
-                                <div class="mt-3 flex gap-2 flex-wrap">${photos}</div>
-                            </div>
-                            <div class="no-print flex flex-col gap-2 min-w-[140px]">
-                                <div class="flex gap-1">
-                                    <button onclick="app.updateStatus(${idx}, 'compliant')" class="status-btn flex-1 py-2 rounded text-[10px] font-bold border border-slate-100 ${item.status === 'compliant' ? 'selected-compliant' : 'bg-slate-50'}">YES</button>
-                                    <button onclick="app.updateStatus(${idx}, 'non-compliant')" class="status-btn flex-1 py-2 rounded text-[10px] font-bold border border-slate-100 ${item.status === 'non-compliant' ? 'selected-non-compliant' : 'bg-slate-50'}">NO</button>
-                                    <button onclick="app.updateStatus(${idx}, 'na')" class="status-btn flex-1 py-2 rounded text-[10px] font-bold border border-slate-100 ${item.status === 'na' ? 'selected-na' : 'bg-slate-50'}">N/A</button>
+                    // Specialized Grid Renders
+                    if (idx === 0 || idx === 1 || idx === 5 || idx === 28 || idx === 32) {
+                        let dataArr = [];
+                        let col1 = "", col2 = "", col3 = "";
+                        let updateFnName = "";
+                        let isReadOnlyCol1 = true;
+                        let inputTypeCol2 = "text";
+                        let inputTypeCol3 = "text";
+
+                        if (idx === 0) {
+                            dataArr = item.guestData || [{name:'', room:'', feedback:''},{name:'', room:'', feedback:''},{name:'', room:'', feedback:''}];
+                            col1 = "Guest Name"; col2 = "Room No"; col3 = "Feedback"; updateFnName = "updateGuestInteraction";
+                            isReadOnlyCol1 = false;
+                        } else if (idx === 1) {
+                            dataArr = item.staffData || [{name:'', dept:'', remarks:''},{name:'', dept:'', remarks:''},{name:'', dept:'', remarks:''}];
+                            col1 = "Staff Name"; col2 = "Department"; col3 = "Remarks"; updateFnName = "updateStaffInteraction";
+                            isReadOnlyCol1 = false;
+                        } else if (idx === 5) {
+                            dataArr = item.checkInData || [{name:'', room:'', feedback:''},{name:'', room:'', feedback:''},{name:'', room:'', feedback:''}];
+                            col1 = "Guest Name"; col2 = "Room No"; col3 = "Feedback"; updateFnName = "updateCheckInInteraction";
+                            isReadOnlyCol1 = false;
+                        } else if (idx === 28) {
+                            dataArr = item.tallyData || [{ outlet: 'Tattva Spa', morning: '', evening: '' },{ outlet: 'Restaurant', morning: '', evening: '' }];
+                            col1 = "Outlet"; col2 = "Morning"; col3 = "Evening"; updateFnName = "updateTallyInteraction";
+                        } else if (idx === 32) {
+                            dataArr = item.dropData || [{ label: '1st Drop', time1: '', time2: '' },{ label: '2nd Drop', time1: '', time2: '' }];
+                            col1 = "Drop Point"; col2 = "Time 1"; col3 = "Time 2"; updateFnName = "updateDropInteraction";
+                            inputTypeCol2 = "time"; inputTypeCol3 = "time";
+                        }
+
+                        let gridHtml = `
+                            <div class="mt-4 overflow-x-auto rounded-lg border border-slate-200">
+                                <table class="w-full min-w-[600px] print:min-w-0 border-collapse text-xs">
+                                    <thead>
+                                        <tr class="bg-slate-50 print:bg-slate-100">
+                                            <th class="border-b border-slate-200 p-3 text-left font-black uppercase w-1/3">${col1}</th>
+                                            <th class="border-b border-l border-slate-200 p-3 text-left font-black uppercase w-1/3">${col2}</th>
+                                            <th class="border-b border-l border-slate-200 p-3 text-left font-black uppercase w-1/3">${col3}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                        `;
+                        dataArr.forEach((d, dIdx) => {
+                            const keys = Object.keys(d);
+                            gridHtml += `
+                                <tr class="print:border-b group">
+                                    <td class="border-b border-slate-200 p-0 print:p-1 align-top bg-white transition-colors group-hover:bg-slate-50">
+                                        <input type="text" value="${d[keys[0]]}" ${isReadOnlyCol1?'readonly':''} placeholder="---" class="w-full min-w-[120px] print:min-w-0 p-3 grid-input no-print ${isReadOnlyCol1?'bg-slate-50 font-bold text-slate-700':'bg-transparent'}" oninput="this.nextElementSibling.textContent = this.value || '---'" onchange="app.${updateFnName}(${dIdx}, '${keys[0]}', this.value)">
+                                        <div class="hidden print-only text-[10px] whitespace-pre-wrap break-words p-1 ${isReadOnlyCol1?'font-bold text-slate-800':'text-slate-800'}">${d[keys[0]] || '---'}</div>
+                                    </td>
+                                    <td class="border-b border-l border-slate-200 p-0 print:p-1 align-top bg-white transition-colors group-hover:bg-slate-50">
+                                        <input type="${inputTypeCol2}" value="${d[keys[1]]}" placeholder="---" class="w-full min-w-[120px] print:min-w-0 p-3 grid-input no-print bg-transparent" oninput="this.nextElementSibling.textContent = this.value || '---'" onchange="app.${updateFnName}(${dIdx}, '${keys[1]}', this.value)">
+                                        <div class="hidden print-only text-[10px] whitespace-pre-wrap break-words p-1 text-slate-800">${d[keys[1]] || '---'}</div>
+                                    </td>
+                                    <td class="border-b border-l border-slate-200 p-0 print:p-1 align-top bg-white transition-colors group-hover:bg-slate-50">
+                                        <input type="${inputTypeCol3}" value="${d[keys[2]]}" placeholder="---" class="w-full min-w-[120px] print:min-w-0 p-3 grid-input no-print bg-transparent" oninput="this.nextElementSibling.textContent = this.value || '---'" onchange="app.${updateFnName}(${dIdx}, '${keys[2]}', this.value)">
+                                        <div class="hidden print-only text-[10px] whitespace-pre-wrap break-words p-1 text-slate-800">${d[keys[2]] || '---'}</div>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        gridHtml += `</tbody></table></div>`;
+
+                        row.innerHTML = `
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-start gap-3">
+                                    <span class="text-teal-600 font-black text-xs mt-0.5 print:text-slate-400">${idx+1}.</span>
+                                    <p class="text-sm font-bold text-slate-800 print:text-[11px] leading-relaxed">${question}</p>
                                 </div>
-                                <button onclick="app.upIdx=${idx}; document.getElementById('item-photo-upload').click()" class="bg-slate-50 text-[10px] font-bold py-2 border border-slate-100 rounded uppercase">Add Photo</button>
+                                ${gridHtml}
+                                ${isBOH ? `
+                                <div class="no-print mt-2 flex gap-2">
+                                    <button onclick="app.triggerPhotoUpload(${idx})" class="text-[10px] font-black bg-slate-50 hover:bg-teal-50 text-slate-500 hover:text-teal-600 py-2 px-4 rounded-lg border border-slate-100 transition-all uppercase">
+                                        <i class="fa-solid fa-camera mr-1"></i> Add Photo Evidence
+                                    </button>
+                                </div>
+                                <div class="mt-3 flex gap-2 overflow-x-auto print:flex-wrap print:mt-1">${photos}</div>
+                                ` : ''}
                             </div>
-                            <div class="hidden print-only text-xs font-bold text-right pt-1">[${(item.status || 'Pending').toUpperCase()}]</div>
-                        </div>
-                    `;
+                        `;
+                    } else {
+                        // Standard Rendering
+                        row.innerHTML = `
+                            <div class="flex flex-col lg:flex-row gap-4 sm:gap-6 print:gap-2">
+                                <div class="flex-1">
+                                    <div class="flex items-start gap-3">
+                                        <span class="text-teal-600 font-black text-xs mt-0.5 print:text-slate-400">${idx+1}.</span>
+                                        <p class="text-sm font-bold text-slate-800 print:text-[11px] leading-relaxed">${question}</p>
+                                    </div>
+                                    <div class="mt-3 no-print"><textarea oninput="this.parentElement.nextElementSibling.textContent = this.value || '---'" onchange="app.updateItemRemarks(${idx}, this.value)" class="w-full border border-slate-100 rounded-lg p-3 text-sm focus:ring-1 focus:ring-teal-500 outline-none transition-shadow" placeholder="Observations..." rows="2">${item.remarks}</textarea></div>
+                                    <div class="hidden print-only text-[11px] text-slate-800 mt-2 font-medium whitespace-pre-wrap break-words">${item.remarks || '---'}</div>
+                                    ${isBOH ? `<div class="mt-3 flex gap-2 overflow-x-auto print:flex-wrap print:mt-1">${photos}</div>` : ''}
+                                </div>
+                                <div class="no-print flex flex-col gap-2 min-w-[150px] w-full lg:w-auto">
+                                    <div class="flex gap-1 w-full">
+                                        <button onclick="app.updateItemStatus(${idx}, 'compliant')" class="status-btn flex-1 py-3 lg:py-2 border border-slate-100 rounded-lg text-[10px] font-black transition-all ${item.status === 'compliant' ? 'selected-compliant' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}">YES</button>
+                                        <button onclick="app.updateItemStatus(${idx}, 'non-compliant')" class="status-btn flex-1 py-3 lg:py-2 border border-slate-100 rounded-lg text-[10px] font-black transition-all ${item.status === 'non-compliant' ? 'selected-non-compliant' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}">NO</button>
+                                        <button onclick="app.updateItemStatus(${idx}, 'na')" class="status-btn flex-1 py-3 lg:py-2 border border-slate-100 rounded-lg text-[10px] font-black transition-all ${item.status === 'na' ? 'selected-na' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}">N/A</button>
+                                    </div>
+                                    ${isBOH ? `<button onclick="app.triggerPhotoUpload(${idx})" class="text-[10px] font-black bg-slate-50 hover:bg-teal-50 text-slate-500 hover:text-teal-600 py-3 lg:py-2 rounded-lg border border-slate-100 transition-all uppercase tracking-tighter w-full"><i class="fa-solid fa-camera mr-1"></i> Add Evidence</button>` : ''}
+                                </div>
+                                <div class="hidden print-only text-[10px] font-black text-right uppercase pt-1">[${item.status || 'PENDING'}]</div>
+                            </div>
+                        `;
+                    }
                     container.appendChild(row);
                 });
-            },
-            remItemPhoto(idx, pi) { this.getCurrentReport().items[idx].photos.splice(pi,1); this.save(); this.renderChecklist(); },
-            exportInteractiveHTML() { /* Implementation for sharing standalone HTML files */ alert("Interactive file generated and downloading..."); }
+            }
         };
 
         window.onload = () => app.init();
