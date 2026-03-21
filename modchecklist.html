@@ -114,8 +114,9 @@
                 <button onclick="window.print()" class="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2 rounded-lg font-bold flex-1 sm:flex-none flex items-center justify-center gap-2 shadow-md transition-colors">
                     <i class="fa-solid fa-file-pdf"></i> Export PDF
                 </button>
-            </div>
-        </div>
+                <button onclick="app.exportInteractiveHTML()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold flex-1 sm:flex-none flex items-center justify-center gap-2 shadow-md transition-colors">
+                    <i class="fa-solid fa-share-nodes"></i> Share Report
+                </button>
 
         <!-- Metadata Header -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-8 mb-6 print-border print:p-2 print:mb-2">
@@ -500,14 +501,14 @@
                 }
             },
 
-            // Compresses image for robust, light-weight PDF rendering 
+            // Smart compression: balances clarity vs storage for 16-30 photo reports
             compressImage(file, callback) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const img = new Image();
                     img.onload = () => {
-                        // 800px maintains clarity for evidence while drastically reducing the data footprint
-                        const MAX_SIZE = 800; 
+                        // 1200px: clear enough to read details, small enough for 30 photos
+                        const MAX_SIZE = 1200;
                         let w = img.width, h = img.height;
                         if (w > h) { if (w > MAX_SIZE) { h = Math.round(h * MAX_SIZE / w); w = MAX_SIZE; } }
                         else       { if (h > MAX_SIZE) { w = Math.round(w * MAX_SIZE / h); h = MAX_SIZE; } }
@@ -519,8 +520,8 @@
                         ctx.imageSmoothingQuality = 'high';
                         ctx.drawImage(img, 0, 0, w, h);
 
-                        // Output at 60% quality which is ideal for standard documentation
-                        callback(canvas.toDataURL('image/jpeg', 0.6));
+                        // 80% quality: visibly sharp in PDF, ~3x smaller than original
+                        callback(canvas.toDataURL('image/jpeg', 0.80));
                     };
                     img.src = e.target.result;
                 };
@@ -589,6 +590,89 @@
             togglePreview() {
                 document.body.classList.toggle('preview-mode');
                 window.scrollTo(0, 0);
+            },
+
+            exportInteractiveHTML() {
+                const r = this.getCurrentReport();
+                const modName = r.meta.modName || 'MOD-Report';
+                const date = r.meta.date || new Date().toISOString().split('T')[0];
+
+                let checklistHTML = '';
+                let currentCat = '';
+                this.checklistItems.forEach((item, idx) => {
+                    const state = r.items[idx] || { status: null, remarks: '' };
+                    if (item.category !== currentCat) {
+                        currentCat = item.category;
+                        checklistHTML += `<div style="background:#0f766e;color:white;padding:8px 16px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-top:16px;">${item.category}</div>`;
+                    }
+                    const statusColor = state.status === 'compliant' ? '#0d9488' : state.status === 'non-compliant' ? '#ef4444' : state.status === 'na' ? '#64748b' : '#e2e8f0';
+                    const statusText = state.status === 'compliant' ? '✓ Compliant' : state.status === 'non-compliant' ? '✗ Non-Compliant' : state.status === 'na' ? '— N/A' : 'Not Set';
+                    const statusTextColor = state.status ? 'white' : '#94a3b8';
+                    const photos = (state.photos || []).map(p => `<img src="${p}" onclick="openLB(this.src)" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;cursor:zoom-in;margin:4px;" title="Tap to enlarge">`).join('');
+                    checklistHTML += `<div style="background:white;border:1px solid #e2e8f0;border-top:none;padding:12px 16px;">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+                            <div style="flex:1;font-size:12px;font-weight:600;color:#1e293b;">${idx + 1}. ${item.label}</div>
+                            <div style="font-size:11px;font-weight:700;color:${statusTextColor};background:${statusColor};padding:3px 10px;border-radius:20px;white-space:nowrap;">${statusText}</div>
+                        </div>
+                        ${state.remarks ? `<div style="font-size:11px;color:#64748b;margin-top:6px;padding:6px 10px;background:#f8fafc;border-radius:6px;">${state.remarks}</div>` : ''}
+                        ${photos ? `<div style="display:flex;flex-wrap:wrap;margin-top:8px;">${photos}</div>` : ''}
+                    </div>`;
+                });
+
+                const generalPhotos = (r.generalPhotos || []).map(p => `<img src="${p}" onclick="openLB(this.src)" style="width:90px;height:90px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;cursor:zoom-in;margin:4px;" title="Tap to enlarge">`).join('');
+
+                const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MOD Report - ${modName} - ${date}</title>
+<style>
+  body{font-family:sans-serif;background:#f1f5f9;margin:0;padding:16px;}
+  .card{background:white;border-radius:12px;padding:20px;margin-bottom:16px;border:1px solid #e2e8f0;}
+  .header{background:#0f766e;color:white;padding:20px;border-radius:12px;margin-bottom:16px;}
+  .meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;}
+  .meta-item label{font-size:10px;font-weight:900;text-transform:uppercase;color:#94a3b8;display:block;margin-bottom:4px;}
+  .meta-item span{font-size:14px;font-weight:700;color:#1e293b;}
+  #lb{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;align-items:center;justify-content:center;cursor:zoom-out;}
+  #lb.open{display:flex;}
+  #lb img{max-width:95vw;max-height:95vh;object-fit:contain;border-radius:8px;}
+  #lb-close{position:absolute;top:16px;right:20px;color:white;font-size:2.5rem;cursor:pointer;font-weight:700;line-height:1;background:rgba(0,0,0,0.5);width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1 style="margin:0 0 4px;font-size:20px;">MOD Audit Report</h1>
+  <p style="margin:0;opacity:0.8;font-size:12px;">👆 Tap any photo to enlarge</p>
+</div>
+<div class="card">
+  <div class="meta-grid">
+    <div class="meta-item"><label>MOD Name</label><span>${r.meta.modName || '---'}</span></div>
+    <div class="meta-item"><label>Day</label><span>${r.meta.day || '---'}</span></div>
+    <div class="meta-item"><label>Date</label><span>${r.meta.date || '---'}</span></div>
+    <div class="meta-item"><label>Time In</label><span>${r.meta.timeIn || '---'}</span></div>
+    <div class="meta-item"><label>Time Out</label><span>${r.meta.timeOut || '---'}</span></div>
+  </div>
+</div>
+${checklistHTML}
+${r.meta.observation || generalPhotos ? `<div class="card" style="margin-top:16px;"><h3 style="margin:0 0 12px;font-size:14px;font-weight:800;color:#1e293b;">General Observation</h3>${r.meta.observation ? `<p style="font-size:13px;color:#475569;white-space:pre-wrap;">${r.meta.observation}</p>` : ''}${generalPhotos ? `<div style="display:flex;flex-wrap:wrap;margin-top:8px;">${generalPhotos}</div>` : ''}</div>` : ''}
+<div id="lb" onclick="closeLB()">
+  <div id="lb-close" onclick="closeLB()">✕</div>
+  <img id="lb-img" src="" alt="Photo">
+</div>
+<script>
+  function openLB(src){document.getElementById('lb-img').src=src;document.getElementById('lb').classList.add('open');}
+  function closeLB(){document.getElementById('lb').classList.remove('open');}
+<\/script>
+</body></html>`;
+
+                const blob = new Blob([html], {type:'text/html'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `MOD-Report-${modName}-${date}.html`;
+                a.click();
+                URL.revokeObjectURL(url);
             },
 
             renderDashboard() {
