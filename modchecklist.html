@@ -341,7 +341,6 @@
                 const sizeMB = (reportString.length / (1024 * 1024)).toFixed(2);
                 const badge = document.getElementById('report-size-badge');
                 if (badge) {
-                    // IndexedDB easily supports 50-100MB+, so warnings trigger much later
                     badge.textContent = `Storage Used: ${sizeMB} MB`;
                     if (sizeMB > 40.0) {
                         badge.className = "text-[10px] font-black px-2 py-0.5 rounded-md bg-red-100 text-red-600 border border-red-200 uppercase w-fit";
@@ -500,13 +499,11 @@
                 }
             },
 
-            // Compresses image for robust, light-weight PDF rendering 
             compressImage(file, callback) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const img = new Image();
                     img.onload = () => {
-                        // 800px maintains clarity for evidence while drastically reducing the data footprint
                         const MAX_SIZE = 800; 
                         let w = img.width, h = img.height;
                         if (w > h) { if (w > MAX_SIZE) { h = Math.round(h * MAX_SIZE / w); w = MAX_SIZE; } }
@@ -518,8 +515,6 @@
                         ctx.imageSmoothingEnabled = true;
                         ctx.imageSmoothingQuality = 'high';
                         ctx.drawImage(img, 0, 0, w, h);
-
-                        // Output at 60% quality which is ideal for standard documentation
                         callback(canvas.toDataURL('image/jpeg', 0.6));
                     };
                     img.src = e.target.result;
@@ -543,7 +538,6 @@
                         if (!report.items[this.currentUploadIndex].photos) report.items[this.currentUploadIndex].photos = [];
                         report.items[this.currentUploadIndex].photos.push(base64);
                         
-                        // Wait for IndexedDB save logic
                         await this.saveToLocal();
                         this.renderChecklist();
                         
@@ -713,8 +707,12 @@
                             col1 = "Outlet"; col2 = "Morning"; col3 = "Evening"; updateFnName = "updateTallyInteraction";
                         } else if (idx === 32) {
                             dataArr = item.dropData || [{ label: '1st Drop', time1: '', time2: '' },{ label: '2nd Drop', time1: '', time2: '' }];
-                            col1 = "Drop Point"; col2 = "Time 1"; col3 = "Time 2"; updateFnName = "updateDropInteraction";
-                            inputTypeCol2 = "time"; inputTypeCol3 = "time";
+                            col1 = "Drop Point"; 
+                            col2 = "Time"; 
+                            col3 = "No of Pax"; 
+                            updateFnName = "updateDropInteraction";
+                            inputTypeCol2 = "time"; 
+                            inputTypeCol3 = "number";
                         }
 
                         let gridHtml = `
