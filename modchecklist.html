@@ -179,7 +179,7 @@
     <script>
         "use strict";
 
-        // Native IndexedDB Wrapper to entirely bypass localStorage's 5MB limitation without dependencies
+        // Native IndexedDB Wrapper
         const dbUtils = {
             dbName: 'HotelModAuditDB',
             storeName: 'auditData',
@@ -301,10 +301,7 @@
 
             async init() {
                 try {
-                    // Try to fetch from new high-capacity IndexedDB first
                     let stored = await dbUtils.get('reportsV8');
-                    
-                    // If empty, automatically migrate data from old 5MB localStorage
                     if (!stored) {
                         const oldStored = localStorage.getItem('hotelModAuditsV7');
                         if (oldStored) {
@@ -312,44 +309,24 @@
                             await dbUtils.set('reportsV8', stored);
                         }
                     }
-                    
                     if (stored) this.reports = stored;
-                } catch (e) { 
-                    console.warn("Storage blocked.", e); 
-                }
-                
+                } catch (e) { console.warn("Storage blocked.", e); }
                 this.renderDashboard();
             },
 
             async saveToLocal() {
                 try {
-                    // Keep a mirrored backup in legacy localStorage if it fits, ignore errors if it doesn't
-                    try { localStorage.setItem('hotelModAuditsV7', JSON.stringify(this.reports)); } catch(e){}
-                    
-                    // Save to the massive IndexedDB
                     const success = await dbUtils.set('reportsV8', this.reports);
                     this.updateSizeIndicator();
                     return success;
-                } catch (e) {
-                    console.error("Storage error:", e);
-                    return false;
-                }
+                } catch (e) { return false; }
             },
 
             updateSizeIndicator() {
                 const reportString = JSON.stringify(this.reports);
                 const sizeMB = (reportString.length / (1024 * 1024)).toFixed(2);
                 const badge = document.getElementById('report-size-badge');
-                if (badge) {
-                    badge.textContent = `Storage Used: ${sizeMB} MB`;
-                    if (sizeMB > 40.0) {
-                        badge.className = "text-[10px] font-black px-2 py-0.5 rounded-md bg-red-100 text-red-600 border border-red-200 uppercase w-fit";
-                    } else if (sizeMB > 25.0) {
-                        badge.className = "text-[10px] font-black px-2 py-0.5 rounded-md bg-amber-100 text-amber-600 border border-amber-200 uppercase w-fit";
-                    } else {
-                        badge.className = "text-[10px] font-black px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 border border-slate-200 uppercase w-fit";
-                    }
-                }
+                if (badge) badge.textContent = `Storage Used: ${sizeMB} MB`;
             },
 
             showDashboard() {
@@ -368,29 +345,18 @@
                 };
                 AUDIT_QUESTIONS.forEach((q, idx) => { 
                     newReport.items[idx] = { status: null, remarks: '', photos: [] };
-                    if (idx === 0) {
-                        newReport.items[idx].guestData = [
-                            { name: '', room: '', feedback: '' }, { name: '', room: '', feedback: '' }, { name: '', room: '', feedback: '' }
-                        ];
-                    }
-                    if (idx === 1) {
-                        newReport.items[idx].staffData = [
-                            { name: '', dept: '', remarks: '' }, { name: '', dept: '', remarks: '' }, { name: '', dept: '', remarks: '' }
-                        ];
-                    }
-                    if (idx === 5) {
-                        newReport.items[idx].checkInData = [
-                            { name: '', room: '', feedback: '' }, { name: '', room: '', feedback: '' }, { name: '', room: '', feedback: '' }
-                        ];
-                    }
-                    if (idx === 28) {
-                        newReport.items[idx].tallyData = [
-                            { outlet: 'Tattva Spa', morning: '', evening: '' }, { outlet: 'Restaurant', morning: '', evening: '' }
-                        ];
-                    }
-                    if (idx === 32) {
-                        newReport.items[idx].dropData = [
-                            { label: '1st Drop', time1: '', time2: '' }, { label: '2nd Drop', time1: '', time2: '' }
+                    if (idx === 0) newReport.items[idx].guestData = [{ name: '', room: '', feedback: '' }, { name: '', room: '', feedback: '' }, { name: '', room: '', feedback: '' }];
+                    if (idx === 1) newReport.items[idx].staffData = [{ name: '', dept: '', remarks: '' }, { name: '', dept: '', remarks: '' }, { name: '', dept: '', remarks: '' }];
+                    if (idx === 5) newReport.items[idx].checkInData = [{ name: '', room: '', feedback: '' }, { name: '', room: '', feedback: '' }, { name: '', room: '', feedback: '' }];
+                    if (idx === 28) newReport.items[idx].tallyData = [{ outlet: 'Tattva Spa', morning: '', evening: '' }, { outlet: 'Restaurant', morning: '', evening: '' }];
+                    if (idx === 32) newReport.items[idx].dropData = [{ label: '1st Drop', time1: '', time2: '' }, { label: '2nd Drop', time1: '', time2: '' }];
+                    if (idx === 60) {
+                        newReport.items[idx].testCallData = [
+                            { outlet: 'Spring', rings: '', staff: '' },
+                            { outlet: 'Myst', rings: '', staff: '' },
+                            { outlet: 'Mysouth', rings: '', staff: '' },
+                            { outlet: 'IRD', rings: '', staff: '' },
+                            { outlet: 'One Touch', rings: '', staff: '' }
                         ];
                     }
                 });
@@ -482,6 +448,15 @@
                 }
             },
 
+            updateTestCallInteraction(rowIdx, field, value) {
+                const report = this.getCurrentReport();
+                if (report && report.items[60]) {
+                    if (!report.items[60].testCallData) report.items[60].testCallData = [{ outlet: 'Spring', rings: '', staff: '' },{ outlet: 'Myst', rings: '', staff: '' },{ outlet: 'Mysouth', rings: '', staff: '' },{ outlet: 'IRD', rings: '', staff: '' },{ outlet: 'One Touch', rings: '', staff: '' }];
+                    report.items[60].testCallData[rowIdx][field] = value;
+                    this.saveToLocal();
+                }
+            },
+
             updateItemStatus(index, status) {
                 const report = this.getCurrentReport();
                 if (report) {
@@ -493,10 +468,7 @@
 
             updateItemRemarks(index, value) {
                 const report = this.getCurrentReport();
-                if (report) {
-                    report.items[index].remarks = value;
-                    this.saveToLocal();
-                }
+                if (report) { report.items[index].remarks = value; this.saveToLocal(); }
             },
 
             compressImage(file, callback) {
@@ -507,13 +479,10 @@
                         const MAX_SIZE = 800; 
                         let w = img.width, h = img.height;
                         if (w > h) { if (w > MAX_SIZE) { h = Math.round(h * MAX_SIZE / w); w = MAX_SIZE; } }
-                        else       { if (h > MAX_SIZE) { w = Math.round(w * MAX_SIZE / h); h = MAX_SIZE; } }
-
+                        else { if (h > MAX_SIZE) { w = Math.round(w * MAX_SIZE / h); h = MAX_SIZE; } }
                         const canvas = document.createElement('canvas');
                         canvas.width = w; canvas.height = h;
                         const ctx = canvas.getContext('2d');
-                        ctx.imageSmoothingEnabled = true;
-                        ctx.imageSmoothingQuality = 'high';
                         ctx.drawImage(img, 0, 0, w, h);
                         callback(canvas.toDataURL('image/jpeg', 0.6));
                     };
@@ -531,16 +500,13 @@
                 const report = this.getCurrentReport();
                 let pending = files.length;
                 if (pending === 0) return;
-                
                 files.forEach(file => {
                     this.compressImage(file, async (base64) => {
                         pending--;
                         if (!report.items[this.currentUploadIndex].photos) report.items[this.currentUploadIndex].photos = [];
                         report.items[this.currentUploadIndex].photos.push(base64);
-                        
                         await this.saveToLocal();
                         this.renderChecklist();
-                        
                         if (pending === 0) input.value = '';
                     });
                 });
@@ -560,15 +526,12 @@
                 const report = this.getCurrentReport();
                 let pending = files.length;
                 if (pending === 0) return;
-                
                 files.forEach(file => {
                     this.compressImage(file, async (base64) => {
                         pending--;
                         report.generalPhotos.push(base64);
-                        
                         await this.saveToLocal();
                         this.renderGeneralPhotos();
-                        
                         if (pending === 0) input.value = '';
                     });
                 });
@@ -580,10 +543,7 @@
                 this.renderGeneralPhotos();
             },
 
-            togglePreview() {
-                document.body.classList.toggle('preview-mode');
-                window.scrollTo(0, 0);
-            },
+            togglePreview() { document.body.classList.toggle('preview-mode'); window.scrollTo(0, 0); },
 
             renderDashboard() {
                 const list = document.getElementById('report-list');
@@ -613,24 +573,15 @@
 
             renderEditor() {
                 const r = this.getCurrentReport();
-                
-                const fields = ['modName', 'day', 'date', 'timeIn', 'timeOut'];
-                fields.forEach(f => {
+                ['modName', 'day', 'date', 'timeIn', 'timeOut'].forEach(f => {
                     const el = document.getElementById(`meta-${f}`);
                     if (el) {
                         el.value = r.meta[f] || '';
-                        if (el.nextElementSibling && el.nextElementSibling.classList.contains('print-only')) {
-                            el.nextElementSibling.textContent = r.meta[f] || '---';
-                        }
+                        if (el.nextElementSibling && el.nextElementSibling.classList.contains('print-only')) el.nextElementSibling.textContent = r.meta[f] || '---';
                     }
                 });
-                
-                const obsEl = document.getElementById('meta-observation');
-                if (obsEl) obsEl.value = r.meta.observation || '';
-                
-                const printObsEl = document.getElementById('print-meta-observation');
-                if (printObsEl) printObsEl.textContent = r.meta.observation || '---';
-                
+                document.getElementById('meta-observation').value = r.meta.observation || '';
+                document.getElementById('print-meta-observation').textContent = r.meta.observation || '---';
                 this.renderChecklist();
                 this.renderGeneralPhotos();
                 this.updateSizeIndicator();
@@ -681,8 +632,7 @@
                         </div>
                     `).join('');
 
-                    // Specialized Grid Renders
-                    if (idx === 0 || idx === 1 || idx === 5 || idx === 28 || idx === 32) {
+                    if (idx === 0 || idx === 1 || idx === 5 || idx === 28 || idx === 32 || idx === 60) {
                         let dataArr = [];
                         let col1 = "", col2 = "", col3 = "";
                         let updateFnName = "";
@@ -707,12 +657,11 @@
                             col1 = "Outlet"; col2 = "Morning"; col3 = "Evening"; updateFnName = "updateTallyInteraction";
                         } else if (idx === 32) {
                             dataArr = item.dropData || [{ label: '1st Drop', time1: '', time2: '' },{ label: '2nd Drop', time1: '', time2: '' }];
-                            col1 = "Drop Point"; 
-                            col2 = "Time"; 
-                            col3 = "No of Pax"; 
-                            updateFnName = "updateDropInteraction";
-                            inputTypeCol2 = "time"; 
-                            inputTypeCol3 = "number";
+                            col1 = "Drop Point"; col2 = "Time"; col3 = "No of Pax"; updateFnName = "updateDropInteraction";
+                            inputTypeCol2 = "time"; inputTypeCol3 = "number";
+                        } else if (idx === 60) {
+                            dataArr = item.testCallData || [{ outlet: 'Spring', rings: '', staff: '' },{ outlet: 'Myst', rings: '', staff: '' },{ outlet: 'Mysouth', rings: '', staff: '' },{ outlet: 'IRD', rings: '', staff: '' },{ outlet: 'One Touch', rings: '', staff: '' }];
+                            col1 = "Outlet"; col2 = "No. of Rings"; col3 = "Staff Name"; updateFnName = "updateTestCallInteraction";
                         }
 
                         let gridHtml = `
@@ -755,18 +704,10 @@
                                     <p class="text-sm font-bold text-slate-800 print:text-[11px] leading-relaxed">${question}</p>
                                 </div>
                                 ${gridHtml}
-                                ${isBOH ? `
-                                <div class="no-print mt-2 flex gap-2">
-                                    <button onclick="app.triggerPhotoUpload(${idx})" class="text-[10px] font-black bg-slate-50 hover:bg-teal-50 text-slate-500 hover:text-teal-600 py-2 px-4 rounded-lg border border-slate-100 transition-all uppercase">
-                                        <i class="fa-solid fa-camera mr-1"></i> Add Photo Evidence
-                                    </button>
-                                </div>
-                                <div class="mt-3 flex gap-2 overflow-x-auto print:flex-wrap print:mt-1">${photos}</div>
-                                ` : ''}
+                                ${isBOH ? `<div class="mt-3 flex gap-2 overflow-x-auto print:flex-wrap print:mt-1">${photos}</div>` : ''}
                             </div>
                         `;
                     } else {
-                        // Standard Rendering
                         row.innerHTML = `
                             <div class="flex flex-col lg:flex-row gap-4 sm:gap-6 print:gap-2">
                                 <div class="flex-1">
