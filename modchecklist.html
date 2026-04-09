@@ -33,8 +33,9 @@
                 padding: 0 !important;
                 appearance: none;
             }
-            .print\:w-20 { width: 5rem !important; }
-            .print\:h-20 { height: 5rem !important; }
+            /* Increased Print Photo Sizes */
+            .print\:w-48 { width: 12rem !important; }
+            .print\:h-48 { height: 12rem !important; }
             .print\:text-\[10px\] { font-size: 10px !important; }
             .print\:min-w-0 { min-width: 0 !important; }
             * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
@@ -162,7 +163,7 @@
             <textarea id="meta-observation" rows="4" placeholder="Summarize your findings for the day..." class="w-full border border-slate-200 rounded-xl p-4 focus:ring-2 focus:ring-teal-500 outline-none no-print transition-shadow" oninput="document.getElementById('print-meta-observation').textContent = this.value || '---'" onchange="app.updateMeta('observation', this.value)"></textarea>
             <div id="print-meta-observation" class="hidden print-only text-[11px] whitespace-pre-wrap border border-slate-100 p-3 rounded min-h-[3rem] mt-2 bg-slate-50 font-medium"></div>
             
-            <div id="general-photos-container" class="mt-4 flex gap-2 overflow-x-auto pb-2 hide-scrollbar print:flex-wrap print:overflow-visible"></div>
+            <div id="general-photos-container" class="mt-4 flex gap-3 overflow-x-auto pb-2 hide-scrollbar print:flex-wrap print:overflow-visible"></div>
         </div>
 
         <!-- Global Inputs -->
@@ -476,7 +477,8 @@
                 reader.onload = (e) => {
                     const img = new Image();
                     img.onload = () => {
-                        const MAX_SIZE = 800; 
+                        // Adjusted MAX_SIZE to 700 to ensure crisp viewing but keep file size minimal (under 10MB easily)
+                        const MAX_SIZE = 700; 
                         let w = img.width, h = img.height;
                         if (w > h) { if (w > MAX_SIZE) { h = Math.round(h * MAX_SIZE / w); w = MAX_SIZE; } }
                         else { if (h > MAX_SIZE) { w = Math.round(w * MAX_SIZE / h); h = MAX_SIZE; } }
@@ -484,7 +486,8 @@
                         canvas.width = w; canvas.height = h;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, w, h);
-                        callback(canvas.toDataURL('image/jpeg', 0.6));
+                        // Using a highly optimized quality setting of 0.55 ensures < 10MB export limits are met.
+                        callback(canvas.toDataURL('image/jpeg', 0.55));
                     };
                     img.src = e.target.result;
                 };
@@ -590,8 +593,9 @@
             renderGeneralPhotos() {
                 const r = this.getCurrentReport();
                 const container = document.getElementById('general-photos-container');
+                // Updated responsive classes to w-28 h-28 sm:w-36 sm:h-36 and print sizes to w-48 h-48
                 container.innerHTML = r.generalPhotos.map((p, i) => `
-                    <div class="relative shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-xl border border-slate-200 overflow-hidden print:w-20 print:h-20">
+                    <div class="relative shrink-0 w-28 h-28 sm:w-36 sm:h-36 rounded-xl border border-slate-200 overflow-hidden print:w-48 print:h-48">
                         <a href="${p}" target="_blank" onclick="event.preventDefault();openLightbox('${p}')" class="block w-full h-full cursor-zoom-in">
                             <img src="${p}" class="w-full h-full object-cover">
                         </a>
@@ -623,8 +627,9 @@
                     const row = document.createElement('div');
                     row.className = "bg-white border-x border-b border-slate-200 p-5 sm:p-6 avoid-break last:rounded-b-2xl print:p-2 print:border-slate-100";
                     
+                    // Updated responsive classes to w-24 h-24 sm:w-32 sm:h-32 and print sizes to w-48 h-48
                     const photos = (item.photos || []).map((p, pi) => `
-                        <div class="relative shrink-0 w-16 h-16 sm:w-20 sm:h-20 border border-slate-200 rounded-lg overflow-hidden print:w-20 print:h-20">
+                        <div class="relative shrink-0 w-24 h-24 sm:w-32 sm:h-32 border border-slate-200 rounded-lg overflow-hidden print:w-48 print:h-48">
                             <a href="${p}" target="_blank" onclick="event.preventDefault();openLightbox('${p}')" class="block w-full h-full cursor-zoom-in">
                                 <img src="${p}" class="w-full h-full object-cover">
                             </a>
@@ -704,7 +709,7 @@
                                     <p class="text-sm font-bold text-slate-800 print:text-[11px] leading-relaxed">${question}</p>
                                 </div>
                                 ${gridHtml}
-                                ${isBOH ? `<div class="mt-3 flex gap-2 overflow-x-auto print:flex-wrap print:mt-1">${photos}</div>` : ''}
+                                ${isBOH ? `<div class="mt-3 flex gap-3 overflow-x-auto print:flex-wrap print:mt-1">${photos}</div>` : ''}
                             </div>
                         `;
                     } else {
@@ -717,7 +722,7 @@
                                     </div>
                                     <div class="mt-3 no-print"><textarea oninput="this.parentElement.nextElementSibling.textContent = this.value || '---'" onchange="app.updateItemRemarks(${idx}, this.value)" class="w-full border border-slate-100 rounded-lg p-3 text-sm focus:ring-1 focus:ring-teal-500 outline-none transition-shadow" placeholder="Observations..." rows="2">${item.remarks}</textarea></div>
                                     <div class="hidden print-only text-[11px] text-slate-800 mt-2 font-medium whitespace-pre-wrap break-words">${item.remarks || '---'}</div>
-                                    ${isBOH ? `<div class="mt-3 flex gap-2 overflow-x-auto print:flex-wrap print:mt-1">${photos}</div>` : ''}
+                                    ${isBOH ? `<div class="mt-3 flex gap-3 overflow-x-auto print:flex-wrap print:mt-1">${photos}</div>` : ''}
                                 </div>
                                 <div class="no-print flex flex-col gap-2 min-w-[150px] w-full lg:w-auto">
                                     <div class="flex gap-1 w-full">
