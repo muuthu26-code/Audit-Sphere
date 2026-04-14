@@ -213,6 +213,9 @@
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-8 mb-6 print-shadow-none print-border print:p-4 print:mb-2">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4 gap-4 print:mb-2 print:pb-2">
                 <h2 class="text-xl sm:text-2xl font-bold text-slate-900 print:text-lg">Check-In Audit Report</h2>
+                <div id="score-summary" class="bg-sky-50 text-sky-800 px-4 py-2 rounded-lg font-bold text-lg border border-sky-200 print:border-none print:bg-transparent print:text-black print:p-0">
+                    Score: 0% <span class="text-sm font-normal text-sky-700 print:text-black">(0/0 pts)</span>
+                </div>
             </div>
             
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-2 print:gap-2 print:mb-0">
@@ -292,32 +295,35 @@
         }
 
         const AUDIT_QUESTIONS = [
-            "[Check-In] Did the GSA make an eye contact with the guests and smile?",
-            "[Check-In] Was the guest greeted in a warm & friendly manner?",
-            "[Check-In] Did the team member ask for name, personal ID and find reservation in Opera?",
-            "[Check-In] Was the guest guided to the welcome corner?",
-            "[Check-In] Member - Did the team member welcome the guest back to property if previously visited.",
-            "[Check-In] Members - Confirm and recognize membership level and eligible benefits.",
-            "[Check-In] Non Member - Ask if guest is willing to join the program and mention the potential benefits",
-            "[Check-In] Did the team member try upselling of room",
-            "[Check-In] Confirm reservation details from the system (stay length, room type, departure date).",
-            "[Check-In] Present registration card for review and signature. Ask for billing address.",
-            "[Check-In] Verify that the email ID is correctly captured and reconfirmed during the check-in process.",
-            "[Check-In] Request payment details as per local credit policy",
-            "[Check-In] Was B'Fast location & timing explained to the guest?",
-            "[Check-In] Was Food & Beverage facilities explained to the guest?",
-            "[Check-In] Was SPA, fitness centre, wet area and swimming pool timing explained?",
-            "[Check-In] Was Wi-fi connection process explained?",
-            "[Check-In] Was the guest explained, room cleaning will be done only post 13.00hrs?",
-            "[Check-In] Are the guests informed about renovation timings?",
-            "[Check-In] Offer assistance with luggage to the guest?",
-            "[Check-In] Accommodate any special requests if requested, where possible?",
-            "[Check-In] Did the hotel associate wish the guest an enjoyable stay?",
-            "[Check-In] Did the GRE escort the guest to identify the luggage?",
-            "[Check-In] Was there an interaction between the guest and the associate?",
-            "[Check-In] Did the complete check in procedure take no more than five minutes?",
-            "[Check-In] Staff should demonstrate the Service Golden Rules at all times.",
-            "[Check-In] Were the guests informed about renovation work being carried out and its timing?"
+            { text: "[Check-In] Did the GSA make an eye contact with the guests and smile?", points: 1 },
+            { text: "[Check-In] Was the guest greeted in a warm & friendly manner?", points: 1 },
+            { text: "[Check-In] Did the team member ask for name, personal ID and find reservation in Opera?", points: 1 },
+            { text: "[Check-In] Was the guest guided to the welcome corner?", points: 1 },
+            { text: "[Check-In] Member - Did the team member welcome the guest back to property if previously visited.", points: 1 },
+            { text: "[Check-In] Members - Confirm and recognize membership level and eligible benefits.", points: 1 },
+            { text: "[Check-In] Non Member - Ask if guest is willing to join the program and mention the potential benefits", points: 1 },
+            { text: "[Check-In] Did the team member try upselling of room", points: 1 },
+            { text: "[Check-In] Confirm reservation details from the system (stay length, room type, departure date).", points: 1 },
+            { text: "[Check-In] Present registration card for review and signature. Ask for billing address.", points: 1 },
+            { text: "[Check-In] Verify that the email ID is correctly captured and reconfirmed during the check-in process.", points: 1 },
+            { text: "[Check-In] Request payment details as per local credit policy", points: 1 },
+            { text: "[Check-In] Was B'Fast location & timing explained to the guest?", points: 1 },
+            { text: "[Check-In] Was Food & Beverage facilities explained to the guest?", points: 1 },
+            { text: "[Check-In] Was SPA, fitness centre, wet area and swimming pool timing explained?", points: 1 },
+            { text: "[Check-In] Was Wi-fi connection process explained?", points: 1 },
+            { text: "[Check-In] Was the guest explained, room cleaning will be done only post 13.00hrs?", points: 1 },
+            { text: "[Check-In] Are the guests informed about renovation timings?", points: 1 },
+            { text: "[Check-In] Offer assistance with luggage to the guest?", points: 1 },
+            { text: "[Check-In] Accommodate any special requests if requested, where possible?", points: 1 },
+            { text: "[Check-In] Did the hotel associate wish the guest an enjoyable stay?", points: 1 },
+            { text: "[Check-In] Did the GRE escort the guest to identify the luggage?", points: 1 },
+            { text: "[Check-In] Was there an interaction between the guest and the associate?", points: 1 },
+            { text: "[Check-In] Did the complete check in procedure take no more than five minutes?", points: 1 },
+            { text: "[Check-In] Staff should demonstrate the Service Golden Rules at all times.", points: 1 },
+            { text: "[Check-In] Were the guests informed about renovation work being carried out and its timing?", points: 1 },
+            { text: "[Lobby Area] Has the furniture been arranged properly?", points: 1 },
+            { text: "[Lobby Area] Are the cushions positioned correctly?", points: 1 },
+            { text: "[Lobby Area] Has housekeeping been informed of any staining found on the upholstered items?", points: 1 }
         ];
 
         const app = {
@@ -712,14 +718,31 @@
                 container.innerHTML = '';
                 
                 let currentCategoryRender = '';
+                let totalEarned = 0;
+                let totalPossible = 0;
 
-                AUDIT_QUESTIONS.forEach((question, index) => {
+                AUDIT_QUESTIONS.forEach((qObj, index) => {
+                    const question = qObj.text;
+                    const itemPoints = qObj.points;
+
                     const itemData = report.items[index] || { status: null, remarks: '', photos: [] };
                     if (!itemData.photos) itemData.photos = [];
                     
                     const isCompliant = itemData.status === 'compliant';
                     const isNonCompliant = itemData.status === 'non-compliant';
                     const isNA = itemData.status === 'na';
+
+                    let itemScoreDisplay = `- / ${itemPoints}`;
+                    if (isCompliant) {
+                        totalEarned += itemPoints;
+                        totalPossible += itemPoints;
+                        itemScoreDisplay = `${itemPoints} / ${itemPoints}`;
+                    } else if (isNonCompliant) {
+                        totalPossible += itemPoints;
+                        itemScoreDisplay = `0 / ${itemPoints}`;
+                    } else if (isNA) {
+                        itemScoreDisplay = `N/A`;
+                    }
 
                     const match = question.match(/^\[(.*?)\]/);
                     let categoryTitle = match ? escapeHTML(match[1]) : 'General Audit';
@@ -753,12 +776,17 @@
                                     <span class="text-slate-400 text-sm font-bold mr-2 mt-1 print:text-[10px] print:mt-0">${index + 1}.</span>
                                     <span class="text-slate-800 font-medium print:text-[10px] print:leading-tight flex-1">${cleanQuestion}</span>
                                 </div>
-                                <div class="hidden print:block mt-2 font-bold text-sm print:mt-0.5 print:text-[10px]">
-                                    Status: 
-                                    ${isCompliant ? '<span class="text-green-600 border border-green-600 px-2 py-0.5 rounded print:px-1 print:py-0">Compliant</span>' : 
-                                     isNonCompliant ? '<span class="text-red-600 border border-red-600 px-2 py-0.5 rounded print:px-1 print:py-0">Non-Compliant</span>' : 
-                                     isNA ? '<span class="text-slate-500 border border-slate-500 px-2 py-0.5 rounded print:px-1 print:py-0">N/A</span>' :
-                                     '<span class="text-slate-400 border border-slate-300 px-2 py-0.5 rounded print:px-1 print:py-0">Not Evaluated</span>'}
+                                <div class="flex items-center mt-2 font-bold text-sm print:mt-0.5 print:text-[10px]">
+                                    <div class="hidden print:block mr-3">
+                                        Status: 
+                                        ${isCompliant ? '<span class="text-green-600 border border-green-600 px-2 py-0.5 rounded print:px-1 print:py-0">Compliant</span>' : 
+                                         isNonCompliant ? '<span class="text-red-600 border border-red-600 px-2 py-0.5 rounded print:px-1 print:py-0">Non-Compliant</span>' : 
+                                         isNA ? '<span class="text-slate-500 border border-slate-500 px-2 py-0.5 rounded print:px-1 print:py-0">N/A</span>' :
+                                         '<span class="text-slate-400 border border-slate-300 px-2 py-0.5 rounded print:px-1 print:py-0">Not Evaluated</span>'}
+                                    </div>
+                                    <span class="text-sky-600 bg-sky-50 px-2 py-1 rounded border border-sky-100 print:border-none print:bg-transparent print:p-0 print:text-black">
+                                        Score: ${itemScoreDisplay}
+                                    </span>
                                 </div>
                             </div>
 
@@ -785,6 +813,13 @@
                     
                     container.appendChild(row);
                 });
+                
+                // Update overall score summary
+                const scoreSummaryEl = document.getElementById('score-summary');
+                if (scoreSummaryEl) {
+                    const scorePercentage = totalPossible > 0 ? Math.round((totalEarned / totalPossible) * 100) : 0;
+                    scoreSummaryEl.innerHTML = `Score: ${scorePercentage}% <span class="text-sm font-normal text-sky-700 print:text-black">(${totalEarned}/${totalPossible} pts)</span>`;
+                }
             }
         };
 
