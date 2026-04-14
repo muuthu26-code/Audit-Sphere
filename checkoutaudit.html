@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#2563eb">
+    <!-- Basic Strict Content Security Policy for HTML Security -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: blob:;">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Check-Out Audit</title>
+    <title>Check-Out Audit Checklist</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -30,7 +32,7 @@
 
         /* Print media query */
         @media print {
-            body { background-color: white !important; color: black !important; }
+            body { background-color: white !important; color: black !important; font-size: 11px !important; line-height: 1.3 !important; }
             .no-print { display: none !important; }
             .print-only { display: block !important; }
             .print-border { border: 1px solid #e5e7eb !important; }
@@ -38,12 +40,41 @@
             .page-break { page-break-before: always; }
             .avoid-break { page-break-inside: avoid; }
             
+            /* Aggressive Page Reduction Classes for PDF Export */
+            .print\:p-0 { padding: 0 !important; }
+            .print\:p-1 { padding: 0.25rem !important; }
+            .print\:p-2 { padding: 0.5rem !important; }
+            .print\:p-4 { padding: 1rem !important; }
+            .print\:py-0\.5 { padding-top: 0.125rem !important; padding-bottom: 0.125rem !important; }
+            .print\:py-1 { padding-top: 0.25rem !important; padding-bottom: 0.25rem !important; }
+            .print\:px-1 { padding-left: 0.25rem !important; padding-right: 0.25rem !important; }
+            .print\:px-2 { padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
+            .print\:pt-0 { padding-top: 0 !important; }
+            .print\:pt-0\.5 { padding-top: 0.125rem !important; }
+            .print\:mt-0 { margin-top: 0 !important; }
+            .print\:mt-0\.5 { margin-top: 0.125rem !important; }
+            .print\:mt-1 { margin-top: 0.25rem !important; }
+            .print\:mb-0 { margin-bottom: 0 !important; }
+            .print\:mb-1 { margin-bottom: 0.25rem !important; }
+            .print\:mb-2 { margin-bottom: 0.5rem !important; }
+            .print\:gap-0\.5 { gap: 0.125rem !important; }
+            .print\:gap-1 { gap: 0.25rem !important; }
+            .print\:text-xs { font-size: 0.75rem !important; line-height: 1rem !important; }
+            .print\:text-\[10px\] { font-size: 10px !important; line-height: 1.2 !important; }
+            .print\:leading-tight { line-height: 1.25 !important; }
+            .print\:min-h-\[30px\] { min-height: 30px !important; }
+            .print\:w-24 { width: 6rem !important; }
+            .print\:h-24 { height: 6rem !important; }
+            .print\:border-none { border: none !important; }
+            .print\:bg-transparent { background-color: transparent !important; }
+            
             /* Clean up inputs for printing */
             input, textarea { 
                 border: none !important; 
                 background: transparent !important;
                 resize: none !important;
                 padding: 0 !important;
+                min-height: 0 !important;
             }
             input::placeholder, textarea::placeholder { color: transparent !important; }
             
@@ -62,15 +93,17 @@
             background: transparent !important;
             resize: none !important;
             padding: 0 !important;
-            pointer-events: none; /* Make uneditable */
+            pointer-events: none;
         }
         body.preview-mode input::placeholder, body.preview-mode textarea::placeholder { color: transparent !important; }
         body.preview-mode .hidden.print\:block { display: block !important; }
+        body.preview-mode .print\:hidden { display: none !important; }
         body.preview-mode #exit-preview-btn { display: flex !important; }
 
         /* Custom toggles */
         .status-btn.selected-compliant { background-color: #10b981; color: white; border-color: #10b981; }
         .status-btn.selected-non-compliant { background-color: #ef4444; color: white; border-color: #ef4444; }
+        .status-btn.selected-na { background-color: #64748b; color: white; border-color: #64748b; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
@@ -85,10 +118,10 @@
         <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-10 mt-4 sm:mt-6 gap-4">
             <div>
                 <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-3">
-                    <i class="fa-solid fa-clipboard-check text-blue-600"></i>
-                    Check-Out Audit
+                    <i class="fa-solid fa-plane-departure text-blue-600"></i>
+                    Check-Out Audit Checklist
                 </h1>
-                <p class="text-sm sm:text-base text-slate-500 mt-1">Manage and file your front-desk check-out audit reports.</p>
+                <p class="text-sm sm:text-base text-slate-500 mt-1">Manage and file your Front Desk Check-Out procedure audits.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                 <button onclick="app.showTrash()" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 px-4 py-2.5 rounded-lg font-medium flex-1 sm:flex-none justify-center flex items-center gap-2 transition-colors shadow-sm">
@@ -98,7 +131,7 @@
                     <i class="fa-solid fa-arrows-rotate"></i> Refresh
                 </button>
                 <button onclick="app.createNewReport()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium flex-1 sm:flex-none justify-center flex items-center gap-2 transition-colors shadow-sm">
-                    <i class="fa-solid fa-plus"></i> New Audit
+                    <i class="fa-solid fa-plus"></i> New Check-Out Audit
                 </button>
             </div>
         </header>
@@ -111,7 +144,7 @@
             <div id="empty-state" class="p-12 text-center text-slate-500 flex flex-col items-center hidden">
                 <i class="fa-solid fa-folder-open text-5xl text-slate-300 mb-4"></i>
                 <p class="text-lg">No audit reports filed yet.</p>
-                <p class="text-sm mt-1">Click the "New Audit" button to get started.</p>
+                <p class="text-sm mt-1">Click the "New Check-Out Audit" button to get started.</p>
             </div>
 
             <ul id="report-list" class="divide-y divide-slate-100">
@@ -128,9 +161,12 @@
                     <i class="fa-solid fa-trash-can text-slate-500"></i>
                     Trash
                 </h1>
-                <p class="text-sm sm:text-base text-slate-500 mt-1">Items are automatically deleted after 30 days.</p>
+                <p class="text-sm sm:text-base text-slate-500 mt-1">Reports remain here until restored or permanently cleared.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                <button onclick="app.emptyTrash()" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2.5 rounded-lg font-medium flex-1 sm:flex-none justify-center flex items-center gap-2 transition-colors border border-red-100">
+                    <i class="fa-solid fa-circle-xmark"></i> Empty Trash
+                </button>
                 <button onclick="app.showDashboard()" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-lg font-medium flex-1 sm:flex-none justify-center flex items-center gap-2 transition-colors shadow-sm">
                     <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
                 </button>
@@ -165,7 +201,7 @@
                 <button onclick="app.refreshReport()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 p-2 sm:px-4 sm:py-2 rounded-lg font-medium flex items-center justify-center transition-colors" title="Clear and reset form">
                     <i class="fa-solid fa-arrows-rotate text-slate-500"></i><span class="hidden sm:inline ml-2">Refresh</span>
                 </button>
-                <button onclick="app.togglePreview()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-medium flex-1 sm:flex-none flex items-center justify-center gap-2 transition-colors text-sm sm:text-base">
+                <button onclick="app.togglePreview()" class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-medium flex-1 sm:flex-none flex items-center justify-center gap-2 transition-colors text-sm sm:text-base">
                     <i class="fa-solid fa-eye"></i> Preview
                 </button>
                 <button onclick="app.saveReport()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-medium flex-1 sm:flex-none flex items-center justify-center gap-2 transition-colors text-sm sm:text-base">
@@ -178,48 +214,46 @@
         </div>
 
         <!-- Report Header / Metadata -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-8 mb-6 print-shadow-none print-border">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4 gap-4">
-                <h2 class="text-xl sm:text-2xl font-bold text-slate-900">Check-Out Audit Report</h2>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-8 mb-6 print-shadow-none print-border print:p-4 print:mb-2">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4 gap-4 print:mb-2 print:pb-2">
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-900 print:text-lg">Check-Out Audit Report</h2>
+                
                 <!-- Score Display -->
-                <div class="w-full sm:w-auto text-center bg-slate-50 rounded-xl p-3 border border-slate-200 min-w-[120px]">
-                    <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Audit Score</div>
-                    <div id="score-percentage" class="text-2xl font-bold text-slate-800">0%</div>
-                    <div id="score-details" class="text-xs text-slate-400 mt-1">0/21 Passed</div>
+                <div class="w-full sm:w-auto text-center bg-slate-50 rounded-xl p-3 border border-slate-200 min-w-[120px] print:border-none print:bg-transparent print:p-0 print:text-right">
+                    <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1 print:hidden">Audit Score</div>
+                    <div id="score-percentage" class="text-2xl font-bold text-slate-800 print:text-black">0%</div>
+                    <div id="score-details" class="text-xs text-slate-400 mt-1 print:text-black">0/0 pts</div>
                 </div>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-2">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-2 print:gap-2 print:mb-0">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Date Conducted On</label>
-                    <input type="date" id="meta-date" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('date', this.value)">
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Date</label>
+                    <input type="date" id="meta-date" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base print:text-xs" onchange="app.updateMeta('date', this.value)">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Time</label>
-                    <input type="time" id="meta-time" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('time', this.value)">
+                    <input type="time" id="meta-time" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base print:text-xs" onchange="app.updateMeta('time', this.value)">
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Auditor Name</label>
-                    <input type="text" id="meta-auditor" placeholder="Enter auditor name" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('auditor', this.value)">
-                </div>
-                
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Guest Name</label>
-                    <input type="text" id="meta-guestName" placeholder="Enter guest name" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('guestName', this.value)">
+                    <input type="text" id="meta-guestName" placeholder="Guest Name" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base print:text-xs" onchange="app.updateMeta('guestName', this.value)">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Room No</label>
-                    <input type="text" id="meta-roomNo" placeholder="Enter room number" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('roomNo', this.value)">
+                    <input type="text" id="meta-roomNo" placeholder="Room No" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base print:text-xs" onchange="app.updateMeta('roomNo', this.value)">
                 </div>
-                <div></div> <!-- Spacer -->
-
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">GSA Name</label>
-                    <input type="text" id="meta-gsaName" placeholder="Enter GSA name" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('gsaName', this.value)">
+                    <input type="text" id="meta-gsaName" placeholder="GSA Name" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base print:text-xs" onchange="app.updateMeta('gsaName', this.value)">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Supervisor on Shift</label>
-                    <input type="text" id="meta-supervisor" placeholder="Enter supervisor name" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('supervisor', this.value)">
+                    <input type="text" id="meta-supervisor" placeholder="Supervisor Name" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base print:text-xs" onchange="app.updateMeta('supervisor', this.value)">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Auditor Name</label>
+                    <input type="text" id="meta-auditor" placeholder="Auditor Name" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base print:text-xs" onchange="app.updateMeta('auditor', this.value)">
                 </div>
             </div>
         </div>
@@ -232,10 +266,26 @@
         </div>
 
         <!-- Final Observations -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-8 mb-6 print-shadow-none print-border avoid-break">
-            <label class="block text-lg font-bold text-slate-900 mb-3">Audit Observation</label>
-            <textarea id="meta-observation" rows="4" placeholder="Enter any final overall observations..." class="w-full border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all text-base text-slate-800 print:p-0 print:border-none" onchange="app.updateMeta('observation', this.value)"></textarea>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-8 mb-6 print-shadow-none print-border avoid-break print:p-4 print:mb-2">
+            <div class="flex justify-between items-center mb-3 print:mb-1">
+                <label class="block text-lg font-bold text-slate-900 print:text-base">General Audit Observation</label>
+                <button onclick="app.triggerGeneralPhotoUpload()" class="no-print bg-slate-100 hover:bg-slate-200 text-slate-700 py-1.5 px-3 rounded text-sm font-medium flex items-center justify-center gap-1.5 transition-colors border border-slate-200">
+                    <i class="fa-solid fa-camera"></i> Attach Photos
+                </button>
+            </div>
+            <textarea id="meta-observation" rows="5" placeholder="Enter any final overall observations..." class="w-full border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all text-base text-slate-800 print:hidden" onchange="app.updateMeta('observation', this.value)" oninput="document.getElementById('print-meta-observation').textContent = this.value"></textarea>
+            
+            <!-- Mirror Div for Print (Guarantees text won't be cut off in PDF export) -->
+            <div id="print-meta-observation" class="hidden print:block w-full text-base text-slate-800 whitespace-pre-wrap min-h-[100px] print:text-xs print:min-h-[30px]"></div>
+            
+            <!-- General Photos Container -->
+            <div id="general-photos-container" class="mt-4 flex gap-3 overflow-x-auto pb-2 hide-scrollbar touch-pan-x empty:hidden print:mt-2">
+                <!-- General Photos injected via JS -->
+            </div>
         </div>
+
+        <!-- Hidden Global Observation Photo Input -->
+        <input type="file" id="general-photo-upload" accept="image/*" multiple class="hidden" onchange="app.handleGeneralPhotoUpload(event)">
 
     </div>
 
@@ -253,27 +303,30 @@
         }
 
         const AUDIT_QUESTIONS = [
-            "Did the GSA make an eye contact with the guests and smile?",
-            "Was the guest greeted in a warm & friendly manner?",
-            "Acknowledging the Guest - Namaste Mr. (if guest name is known) May I Help you.",
-            "Ask for Name and Room Number to display bill information.",
-            "Tone of Voice - Enquiring the guest about their stay.",
-            "If Non- Member - Enquire the guest would be interested in becoming member (as its last chance to do so prior to check-out).",
-            "If member thank the guest for being Radisson Reward Member.",
-            "Did the staff member capture the correct email address to facilitate the digital invoice?",
-            "Billing - Bill details Checked (E-mail, Address, Company Name & GST number).",
-            "Digital / Printed Invoice - Was Invoice shown to guest for review.",
-            "Mode of Payment - If member Confirm Payment Method (Radisson rewards, Redemption night, Cash, Card, BTC & others).",
-            "Guest Invoice - Inform the guest that their Invoice would be sent digitally.",
-            "Was there an interaction between the guest and the associate?",
-            "Interaction by GRE / D.M - Duty manager/GRE spoke interaction with the guest.",
-            "Did staff demonstrate Service Golden Rules through Check-Out Process?",
-            "Farewell - Upon check-out, thank the guests for staying with us.",
-            "Bot shot feedback obtained.",
-            "Feedback Request - Review Pro and Other Social Medial Platform.",
-            "Guest Feedback.",
-            "Time - Time taken for check-out.",
-            "Was the key card collected from guest."
+            { text: "Did the GSA make an eye contact with the guests and smile?", points: 1 },
+            { text: "Was the guest greeted in a warm & friendly manner?", points: 1 },
+            { text: "Acknowledging the Guest - Namaste Mr. (if guest name is known) May I Help you.", points: 1 },
+            { text: "Ask for Name and Room Number to display bill information.", points: 1 },
+            { text: "Tone of Voice - Enquiring the guest about their stay.", points: 1 },
+            { text: "If Non- Member - Enquire the guest would be interested in becoming member (as its last chance to do so prior to check-out).", points: 1 },
+            { text: "If member thank the guest for being Radisson Reward Member.", points: 1 },
+            { text: "Did the staff member capture the correct email address to facilitate the digital invoice?", points: 1 },
+            { text: "Billing - Bill details Checked (E-mail, Address, Company Name & GST number).", points: 1 },
+            { text: "Digital / Printed Invoice - Was Invoice shown to guest for review.", points: 1 },
+            { text: "Mode of Payment - If member Confirm Payment Method (Radisson rewards, Redemption night, Cash, Card, BTC & others).", points: 1 },
+            { text: "Guest Invoice - Inform the guest that their Invoice would be sent digitally.", points: 1 },
+            { text: "Was there an interaction between the guest and the associate?", points: 1 },
+            { text: "Interaction by GRE / D.M - Duty manager/GRE spoke interaction with the guest.", points: 1 },
+            { text: "Did staff demonstrate Service Golden Rules through Check-Out Process?", points: 1 },
+            { text: "Farewell - Upon check-out, thank the guests for staying with us.", points: 1 },
+            { text: "Bot shot feedback obtained.", points: 1 },
+            { text: "Feedback Request - Review Pro and Other Social Medial Platform.", points: 1 },
+            { text: "Guest Feedback.", points: 1 },
+            { text: "Time - Time taken for check-out.", points: 1 },
+            { text: "Was the key card collected from guest.", points: 1 },
+            { text: "[Lobby Area] Has the furniture been arranged properly?", points: 1 },
+            { text: "[Lobby Area] Are the cushions positioned correctly?", points: 1 },
+            { text: "[Lobby Area] Has housekeeping been informed of any staining found on the upholstered items?", points: 1 }
         ];
 
         const app = {
@@ -281,8 +334,8 @@
             currentReportId: null,
             
             init() {
-                // Unique key for the New Check-Out Audits
-                const stored = localStorage.getItem('hotelCheckoutAuditsNew');
+                // Unique key for the Check-Out Audits
+                const stored = localStorage.getItem('hotelCheckOutAuditsV1');
                 if (stored) {
                     try {
                         this.reports = JSON.parse(stored);
@@ -290,12 +343,11 @@
                         console.error("Could not parse stored reports.");
                     }
                 }
-                this.cleanUpTrash(); // Ensures 30-day strict cleanup happens on load
                 this.renderDashboard();
             },
 
             saveToLocal() {
-                localStorage.setItem('hotelCheckoutAuditsNew', JSON.stringify(this.reports));
+                localStorage.setItem('hotelCheckOutAuditsV1', JSON.stringify(this.reports));
                 
                 const statusIndicator = document.getElementById('save-status');
                 const statusIndicatorMobile = document.getElementById('save-status-mobile');
@@ -307,25 +359,6 @@
                     if(statusIndicator) statusIndicator.textContent = "Saved locally";
                     if(statusIndicatorMobile) statusIndicatorMobile.textContent = "Saved locally";
                 }, 1000);
-            },
-
-            cleanUpTrash() {
-                const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
-                const now = Date.now();
-                let changed = false;
-
-                this.reports = this.reports.filter(report => {
-                    if (report.deletedAt) {
-                        // Check if it's older than 30 days
-                        if (now - report.deletedAt > THIRTY_DAYS) {
-                            changed = true;
-                            return false; // Permanently delete because it is > 30 days
-                        }
-                    }
-                    return true;
-                });
-
-                if (changed) this.saveToLocal();
             },
 
             showDashboard() {
@@ -364,18 +397,18 @@
                         date: new Date().toISOString().split('T')[0],
                         time: '',
                         guestName: '',
-                        gsaName: '',
                         roomNo: '',
+                        gsaName: '',
                         supervisor: '',
                         auditor: '',
                         observation: ''
                     },
-                    items: {} // Will hold { index: { status: 'compliant'|'non-compliant'|null, remarks: '' } }
+                    generalPhotos: [],
+                    items: {}
                 };
                 
-                // Initialize items
                 AUDIT_QUESTIONS.forEach((q, idx) => {
-                    newReport.items[idx] = { status: null, remarks: '' };
+                    newReport.items[idx] = { status: null, remarks: '', photos: [] };
                 });
 
                 this.reports.unshift(newReport);
@@ -413,6 +446,14 @@
                 }
             },
 
+            emptyTrash() {
+                if(confirm("Are you sure you want to permanently delete all items in the trash? This action cannot be undone.")) {
+                    this.reports = this.reports.filter(r => !r.deletedAt);
+                    this.saveToLocal();
+                    this.renderTrash();
+                }
+            },
+
             getCurrentReport() {
                 return this.reports.find(r => r.id === this.currentReportId);
             },
@@ -425,8 +466,9 @@
                             date: new Date().toISOString().split('T')[0],
                             time: '', guestName: '', gsaName: '', roomNo: '', supervisor: '', auditor: '', observation: ''
                         };
+                        report.generalPhotos = [];
                         AUDIT_QUESTIONS.forEach((q, idx) => {
-                            report.items[idx] = { status: null, remarks: '' };
+                            report.items[idx] = { status: null, remarks: '', photos: [] };
                         });
                         this.saveToLocal();
                         this.renderEditor();
@@ -435,17 +477,22 @@
             },
 
             calculateScore(report) {
-                let compliant = 0;
-                let nonCompliant = 0;
-                const total = AUDIT_QUESTIONS.length;
+                let earnedPoints = 0;
+                let totalPossible = 0;
                 
-                for (let i = 0; i < total; i++) {
-                    if (report.items[i] && report.items[i].status === 'compliant') compliant++;
-                    if (report.items[i] && report.items[i].status === 'non-compliant') nonCompliant++;
-                }
+                AUDIT_QUESTIONS.forEach((qObj, i) => {
+                    const item = report.items[i];
+                    // If N/A or unevaluated, it does not contribute to the total possible denominator
+                    if (item && (item.status === 'compliant' || item.status === 'non-compliant')) {
+                        totalPossible += qObj.points;
+                        if (item.status === 'compliant') {
+                            earnedPoints += qObj.points;
+                        }
+                    }
+                });
                 
-                const percentage = Math.round((compliant / total) * 100) || 0;
-                return { compliant, nonCompliant, total, percentage };
+                const percentage = totalPossible > 0 ? Math.round((earnedPoints / totalPossible) * 100) : 0;
+                return { compliant: earnedPoints, total: totalPossible, percentage };
             },
 
             updateScoreUI() {
@@ -457,10 +504,10 @@
                 const detEl = document.getElementById('score-details');
                 if (pctEl && detEl) {
                     pctEl.textContent = `${score.percentage}%`;
-                    detEl.textContent = `${score.compliant}/${score.total} Passed`;
+                    detEl.textContent = `${score.compliant}/${score.total} pts`;
                     
                     // Update color based on score
-                    pctEl.className = `text-2xl font-bold ${score.percentage >= 80 ? 'text-green-600' : score.percentage >= 50 ? 'text-amber-500' : 'text-red-600'}`;
+                    pctEl.className = `text-2xl font-bold print:text-black ${score.percentage >= 80 ? 'text-green-600' : score.percentage >= 50 ? 'text-amber-500' : 'text-red-600'}`;
                 }
             },
 
@@ -468,6 +515,9 @@
                 const report = this.getCurrentReport();
                 if (report) {
                     report.meta[field] = value;
+                    if (field === 'observation') {
+                        document.getElementById('print-meta-observation').textContent = value;
+                    }
                     this.saveToLocal();
                 }
             },
@@ -475,11 +525,10 @@
             updateItemStatus(index, status) {
                 const report = this.getCurrentReport();
                 if (report) {
-                    // Toggle off if clicking the already selected status
                     report.items[index].status = (report.items[index].status === status) ? null : status;
                     this.saveToLocal();
-                    this.renderChecklist(); // Re-render just the checklist part
-                    this.updateScoreUI(); // Update the score display
+                    this.renderChecklist();
+                    this.updateScoreUI();
                 }
             },
 
@@ -494,6 +543,93 @@
             saveReport() {
                 this.saveToLocal();
                 alert("Draft saved successfully.");
+            },
+
+            compressImage(file, callback) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 400;
+                        const MAX_HEIGHT = 400;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_WIDTH) {
+                                height *= MAX_WIDTH / width;
+                                width = MAX_WIDTH;
+                            }
+                        } else {
+                            if (height > MAX_HEIGHT) {
+                                width *= MAX_HEIGHT / height;
+                                height = MAX_HEIGHT;
+                            }
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        callback(canvas.toDataURL('image/jpeg', 0.4)); 
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            },
+
+            triggerGeneralPhotoUpload() {
+                document.getElementById('general-photo-upload').value = '';
+                document.getElementById('general-photo-upload').click();
+            },
+
+            handleGeneralPhotoUpload(event) {
+                const files = event.target.files;
+                if (!files || files.length === 0) return;
+                
+                const report = this.getCurrentReport();
+                if (!report) return;
+                
+                if (!report.generalPhotos) {
+                    report.generalPhotos = [];
+                }
+
+                Array.from(files).forEach(file => {
+                    this.compressImage(file, (base64Img) => {
+                        report.generalPhotos.push(base64Img);
+                        this.saveToLocal();
+                        this.renderGeneralPhotos();
+                    });
+                });
+            },
+
+            removeGeneralPhoto(photoIndex) {
+                if(confirm("Are you sure you want to remove this general observation photo?")) {
+                    const report = this.getCurrentReport();
+                    if (report && report.generalPhotos) {
+                        report.generalPhotos.splice(photoIndex, 1);
+                        this.saveToLocal();
+                        this.renderGeneralPhotos();
+                    }
+                }
+            },
+
+            renderGeneralPhotos() {
+                const report = this.getCurrentReport();
+                const container = document.getElementById('general-photos-container');
+                container.innerHTML = '';
+                
+                if (report && report.generalPhotos && report.generalPhotos.length > 0) {
+                    container.innerHTML = report.generalPhotos.map((p, pIdx) => `
+                        <div class="relative group shrink-0 w-28 h-28 rounded border border-slate-200 overflow-hidden print:w-24 print:h-24 print:border-slate-300">
+                            <img src="${escapeHTML(p)}" class="w-full h-full object-cover">
+                            <button onclick="app.removeGeneralPhoto(${pIdx})" class="no-print absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white w-7 h-7 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm">
+                                <i class="fa-solid fa-xmark text-sm"></i>
+                            </button>
+                        </div>
+                    `).join('');
+                }
             },
 
             renderDashboard() {
@@ -514,11 +650,9 @@
                 list.classList.remove('hidden');
 
                 activeReports.forEach(report => {
-                    const guestName = escapeHTML(report.meta.guestName) || "Unknown Guest";
-                    const roomInfo = report.meta.roomNo ? `Room ${escapeHTML(report.meta.roomNo)}` : "No Room Info";
-                    const date = escapeHTML(report.meta.date) || "No Date";
-                    const score = this.calculateScore(report);
-                    const scoreColorClass = score.percentage >= 80 ? 'text-green-700 bg-green-100' : score.percentage >= 50 ? 'text-amber-700 bg-amber-100' : 'text-red-700 bg-red-100';
+                    const guestInfo = report.meta.guestName ? `Guest: ${escapeHTML(report.meta.guestName)}` : "No Guest Name";
+                    const date = report.meta.date || "No Date";
+                    const scoreObj = this.calculateScore(report);
                     
                     const li = document.createElement('li');
                     li.className = "p-4 hover:bg-slate-50 cursor-pointer transition-colors flex items-center justify-between group";
@@ -527,16 +661,17 @@
                     li.innerHTML = `
                         <div class="flex items-center gap-4">
                             <div class="bg-blue-100 p-3 rounded-lg text-blue-600">
-                                <i class="fa-solid fa-clipboard-check text-xl"></i>
+                                <i class="fa-solid fa-plane-departure text-xl"></i>
                             </div>
                             <div>
                                 <h3 class="font-semibold text-slate-900 text-lg">
-                                    ${guestName} - ${roomInfo}
+                                    ${guestInfo}
                                 </h3>
                                 <div class="flex items-center gap-3 text-sm text-slate-500 mt-1">
-                                    <span class="px-2 py-0.5 rounded font-bold ${scoreColorClass}">${score.percentage}% Score</span>
-                                    <span><i class="fa-regular fa-calendar mr-1"></i> ${date}</span>
-                                    ${report.meta.auditor ? `<span>•</span><span>Auditor: ${escapeHTML(report.meta.auditor)}</span>` : ''}
+                                    <span><i class="fa-regular fa-calendar mr-1"></i> ${escapeHTML(date)}</span>
+                                    ${report.meta.roomNo ? `<span>•</span><span>Room: ${escapeHTML(report.meta.roomNo)}</span>` : ''}
+                                    <span>•</span>
+                                    <span class="${scoreObj.percentage >= 80 ? 'text-green-600' : scoreObj.percentage >= 50 ? 'text-amber-500' : 'text-red-500'} font-medium">Score: ${scoreObj.percentage}%</span>
                                 </div>
                             </div>
                         </div>
@@ -565,17 +700,10 @@
                 emptyState.classList.add('hidden');
                 list.classList.remove('hidden');
 
-                const now = Date.now();
-                const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
-
                 trashedReports.forEach(report => {
-                    const guestName = escapeHTML(report.meta.guestName) || "Unknown Guest";
-                    const roomInfo = report.meta.roomNo ? `Room ${escapeHTML(report.meta.roomNo)}` : "No Room Info";
-                    const date = escapeHTML(report.meta.date) || "No Date";
-                    
-                    const timeInTrash = now - report.deletedAt;
-                    const daysLeft = Math.ceil((THIRTY_DAYS - timeInTrash) / (1000 * 60 * 60 * 24));
-                    const daysLeftText = daysLeft > 1 ? `${daysLeft} days left` : (daysLeft === 1 ? `1 day left` : `Deleting today`);
+                    const guestInfo = report.meta.guestName ? `Guest: ${escapeHTML(report.meta.guestName)}` : "No Guest Name";
+                    const date = report.meta.date || "No Date";
+                    const deletedOn = new Date(report.deletedAt).toLocaleDateString();
 
                     const li = document.createElement('li');
                     li.className = "p-4 hover:bg-slate-50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between group gap-4";
@@ -587,12 +715,12 @@
                             </div>
                             <div>
                                 <h3 class="font-semibold text-slate-500 text-lg line-through">
-                                    ${guestName} - ${roomInfo}
+                                    ${guestInfo}
                                 </h3>
                                 <div class="flex items-center gap-3 text-sm text-slate-400 mt-1">
-                                    <span><i class="fa-regular fa-calendar mr-1"></i> ${date}</span>
+                                    <span><i class="fa-regular fa-calendar mr-1"></i> ${escapeHTML(date)}</span>
                                     <span>•</span>
-                                    <span class="text-orange-500 font-medium"><i class="fa-solid fa-clock mr-1"></i> ${daysLeftText}</span>
+                                    <span><i class="fa-solid fa-trash-can mr-1"></i> Deleted on: ${deletedOn}</span>
                                 </div>
                             </div>
                         </div>
@@ -618,9 +746,12 @@
                 document.getElementById('meta-roomNo').value = report.meta.roomNo || '';
                 document.getElementById('meta-supervisor').value = report.meta.supervisor || '';
                 document.getElementById('meta-auditor').value = report.meta.auditor || '';
+                
                 document.getElementById('meta-observation').value = report.meta.observation || '';
+                document.getElementById('print-meta-observation').textContent = report.meta.observation || '';
 
                 this.renderChecklist();
+                this.renderGeneralPhotos();
                 this.updateScoreUI();
             },
 
@@ -629,49 +760,90 @@
                 const container = document.getElementById('checklist-container');
                 container.innerHTML = '';
 
-                AUDIT_QUESTIONS.forEach((question, index) => {
+                let currentCategoryRender = '';
+
+                AUDIT_QUESTIONS.forEach((qObj, index) => {
+                    const questionText = qObj.text;
+                    const itemPoints = qObj.points;
                     const itemData = report.items[index] || { status: null, remarks: '' };
                     
                     const isCompliant = itemData.status === 'compliant';
                     const isNonCompliant = itemData.status === 'non-compliant';
+                    const isNA = itemData.status === 'na';
+
+                    let itemScoreDisplay = `- / ${itemPoints}`;
+                    if (isCompliant) {
+                        itemScoreDisplay = `${itemPoints} / ${itemPoints}`;
+                    } else if (isNonCompliant) {
+                        itemScoreDisplay = `0 / ${itemPoints}`;
+                    } else if (isNA) {
+                        itemScoreDisplay = `N/A`;
+                    }
+
+                    const match = questionText.match(/^\[(.*?)\]/);
+                    let categoryTitle = match ? escapeHTML(match[1]) : 'Check-Out Process';
+                    let cleanQuestion = escapeHTML(questionText.replace(/^\[(.*?)\]\s*/, ''));
+                    
+                    if (categoryTitle && categoryTitle !== currentCategoryRender) {
+                        const header = document.createElement('div');
+                        header.className = "bg-blue-50 border-y border-blue-100 px-4 sm:px-6 py-3 mt-4 first:mt-0 avoid-break print:bg-slate-100 print:border-slate-300 print:mt-1 print:py-1 print:px-2";
+                        header.innerHTML = `<h3 class="text-base sm:text-lg font-bold text-blue-900 uppercase tracking-wide print:text-black">${categoryTitle}</h3>`;
+                        container.appendChild(header);
+                        currentCategoryRender = categoryTitle;
+                    }
 
                     const row = document.createElement('div');
-                    row.className = "p-4 sm:p-6 hover:bg-slate-50/50 transition-colors avoid-break border-b border-slate-100 last:border-0";
+                    row.className = "p-4 sm:p-6 hover:bg-slate-50/50 transition-colors avoid-break border-b border-slate-100 last:border-0 print:p-1.5 print:py-1";
 
                     row.innerHTML = `
-                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-start print:gap-1">
                             <!-- Question -->
-                            <div class="md:col-span-6 pr-0 md:pr-4">
-                                <span class="text-slate-400 text-sm font-bold mr-2">${index + 1}.</span>
-                                <span class="text-slate-800 font-medium">${escapeHTML(question)}</span>
+                            <div class="md:col-span-5 pr-0 md:pr-4">
+                                <div class="flex items-start flex-wrap gap-y-2 print:gap-y-0.5">
+                                    <span class="text-slate-400 text-sm font-bold mr-2 mt-1 print:text-[10px] print:mt-0">${index + 1}.</span>
+                                    <span class="text-slate-800 font-medium print:text-[10px] print:leading-tight flex-1">${cleanQuestion}</span>
+                                </div>
                                 
-                                <!-- Print Only Status Display -->
-                                <div class="hidden print:block mt-2 font-bold text-sm">
-                                    Status: 
-                                    ${isCompliant ? '<span class="text-green-600 border border-green-600 px-2 py-0.5 rounded">Compliant</span>' : 
-                                     isNonCompliant ? '<span class="text-red-600 border border-red-600 px-2 py-0.5 rounded">Non-Compliant</span>' : 
-                                     '<span class="text-slate-400 border border-slate-300 px-2 py-0.5 rounded">Not Evaluated</span>'}
+                                <div class="flex items-center mt-2 font-bold text-sm print:mt-0.5 print:text-[10px]">
+                                    <!-- Print Only Status Display -->
+                                    <div class="hidden print:block mr-3">
+                                        Status: 
+                                        ${isCompliant ? '<span class="text-green-600 border border-green-600 px-2 py-0.5 rounded print:px-1 print:py-0">Compliant</span>' : 
+                                         isNonCompliant ? '<span class="text-red-600 border border-red-600 px-2 py-0.5 rounded print:px-1 print:py-0">Non-Compliant</span>' : 
+                                         isNA ? '<span class="text-slate-500 border border-slate-500 px-2 py-0.5 rounded print:px-1 print:py-0">N/A</span>' :
+                                         '<span class="text-slate-400 border border-slate-300 px-2 py-0.5 rounded print:px-1 print:py-0">Not Evaluated</span>'}
+                                    </div>
+                                    <span class="text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-100 print:border-none print:bg-transparent print:p-0 print:text-black">
+                                        Score: ${itemScoreDisplay}
+                                    </span>
                                 </div>
                             </div>
 
                             <!-- Status Buttons (Hidden in Print & Preview) -->
-                            <div class="md:col-span-3 flex gap-2 sm:gap-3 justify-center no-print">
+                            <div class="md:col-span-4 flex gap-1.5 sm:gap-2 justify-center no-print">
                                 <button onclick="app.updateItemStatus(${index}, 'compliant')" 
-                                    class="status-btn flex-1 py-3 md:py-2 px-3 border border-slate-200 rounded-md text-sm font-medium transition-colors ${isCompliant ? 'selected-compliant' : 'text-slate-600 hover:bg-slate-100'}">
-                                    <i class="fa-solid fa-check mr-1"></i> Yes
+                                    class="status-btn flex-1 py-3 md:py-2 px-1 sm:px-2 border border-slate-200 rounded-md text-xs sm:text-sm font-medium transition-colors ${isCompliant ? 'selected-compliant' : 'text-blue-600 hover:bg-slate-100'}">
+                                    <i class="fa-solid fa-check mr-1 hidden sm:inline"></i> Yes
                                 </button>
                                 <button onclick="app.updateItemStatus(${index}, 'non-compliant')" 
-                                    class="status-btn flex-1 py-3 md:py-2 px-3 border border-slate-200 rounded-md text-sm font-medium transition-colors ${isNonCompliant ? 'selected-non-compliant' : 'text-slate-600 hover:bg-slate-100'}">
-                                    <i class="fa-solid fa-xmark mr-1"></i> No
+                                    class="status-btn flex-1 py-3 md:py-2 px-1 sm:px-2 border border-slate-200 rounded-md text-xs sm:text-sm font-medium transition-colors ${isNonCompliant ? 'selected-non-compliant' : 'text-blue-600 hover:bg-slate-100'}">
+                                    <i class="fa-solid fa-xmark mr-1 hidden sm:inline"></i> No
+                                </button>
+                                <button onclick="app.updateItemStatus(${index}, 'na')" 
+                                    class="status-btn flex-1 py-3 md:py-2 px-1 sm:px-2 border border-slate-200 rounded-md text-xs sm:text-sm font-medium transition-colors ${isNA ? 'selected-na' : 'text-slate-500 hover:bg-slate-100'}">
+                                    <i class="fa-solid fa-minus mr-1 hidden sm:inline"></i> N/A
                                 </button>
                             </div>
 
                             <!-- Remarks Action -->
-                            <div class="md:col-span-3 flex flex-col gap-2">
+                            <div class="md:col-span-3 flex flex-col gap-2 print:gap-0.5 print:mt-0 print:border-none print:pt-0">
                                 <textarea rows="2" 
                                     onchange="app.updateItemRemarks(${index}, this.value)"
+                                    oninput="this.nextElementSibling.textContent = this.value"
                                     placeholder="Add remarks..." 
-                                    class="w-full text-base sm:text-sm p-2 border border-slate-200 rounded-md focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none print:p-0 print:border-none print:bg-transparent print:resize-none">${escapeHTML(itemData.remarks)}</textarea>
+                                    class="w-full text-base sm:text-sm p-2 border border-slate-200 rounded-md focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none print:hidden resize-none">${escapeHTML(itemData.remarks)}</textarea>
+                                
+                                <div class="hidden print:block whitespace-pre-wrap print:text-[10px] print:leading-tight print:pt-0.5">${escapeHTML(itemData.remarks || '')}</div>
                             </div>
                         </div>
                     `;
