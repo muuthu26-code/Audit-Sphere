@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#0ea5e9">
+    <meta name="theme-color" content="#2563eb">
     <!-- Basic Strict Content Security Policy for HTML Security -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: blob:;">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Check-In Audit Checklist</title>
+    <title>Check-Out Audit Checklist</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -47,22 +47,26 @@
             .print\:p-4 { padding: 1rem !important; }
             .print\:py-0\.5 { padding-top: 0.125rem !important; padding-bottom: 0.125rem !important; }
             .print\:py-1 { padding-top: 0.25rem !important; padding-bottom: 0.25rem !important; }
+            .print\:px-1 { padding-left: 0.25rem !important; padding-right: 0.25rem !important; }
             .print\:px-2 { padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
+            .print\:pt-0 { padding-top: 0 !important; }
             .print\:pt-0\.5 { padding-top: 0.125rem !important; }
+            .print\:mt-0 { margin-top: 0 !important; }
             .print\:mt-0\.5 { margin-top: 0.125rem !important; }
             .print\:mt-1 { margin-top: 0.25rem !important; }
-            .print\:mt-2 { margin-top: 0.5rem !important; }
             .print\:mb-0 { margin-bottom: 0 !important; }
             .print\:mb-1 { margin-bottom: 0.25rem !important; }
             .print\:mb-2 { margin-bottom: 0.5rem !important; }
+            .print\:gap-0\.5 { gap: 0.125rem !important; }
             .print\:gap-1 { gap: 0.25rem !important; }
-            .print\:gap-2 { gap: 0.5rem !important; }
             .print\:text-xs { font-size: 0.75rem !important; line-height: 1rem !important; }
             .print\:text-\[10px\] { font-size: 10px !important; line-height: 1.2 !important; }
             .print\:leading-tight { line-height: 1.25 !important; }
             .print\:min-h-\[30px\] { min-height: 30px !important; }
-            .print\:w-12 { width: 3rem !important; }
-            .print\:h-12 { height: 3rem !important; }
+            .print\:w-24 { width: 6rem !important; }
+            .print\:h-24 { height: 6rem !important; }
+            .print\:border-none { border: none !important; }
+            .print\:bg-transparent { background-color: transparent !important; }
             
             /* Clean up inputs for printing */
             input, textarea { 
@@ -89,11 +93,11 @@
             background: transparent !important;
             resize: none !important;
             padding: 0 !important;
-            pointer-events: none; /* Make uneditable */
+            pointer-events: none;
         }
         body.preview-mode input::placeholder, body.preview-mode textarea::placeholder { color: transparent !important; }
         body.preview-mode .hidden.print\:block { display: block !important; }
-        body.preview-mode .print\:hidden { display: none !important; } /* Fix for textarea mirroring */
+        body.preview-mode .print\:hidden { display: none !important; }
         body.preview-mode #exit-preview-btn { display: flex !important; }
 
         /* Custom toggles */
@@ -114,10 +118,10 @@
         <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-10 mt-4 sm:mt-6 gap-4">
             <div>
                 <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-3">
-                    <i class="fa-solid fa-concierge-bell text-sky-600"></i>
-                    Check-In Audit Checklist
+                    <i class="fa-solid fa-plane-departure text-blue-600"></i>
+                    Check-Out Audit Checklist
                 </h1>
-                <p class="text-sm sm:text-base text-slate-500 mt-1">Manage and file your Front Desk Check-In procedure audits.</p>
+                <p class="text-sm sm:text-base text-slate-500 mt-1">Manage and file your Front Desk Check-Out procedure audits.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                 <button onclick="app.showTrash()" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 px-4 py-2.5 rounded-lg font-medium flex-1 sm:flex-none justify-center flex items-center gap-2 transition-colors shadow-sm">
@@ -126,8 +130,8 @@
                 <button onclick="window.location.reload()" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-lg font-medium flex-1 sm:flex-none justify-center flex items-center gap-2 transition-colors shadow-sm">
                     <i class="fa-solid fa-arrows-rotate"></i> Refresh
                 </button>
-                <button onclick="app.createNewReport()" class="bg-sky-600 hover:bg-sky-700 text-white px-5 py-2.5 rounded-lg font-medium flex-1 sm:flex-none justify-center flex items-center gap-2 transition-colors shadow-sm">
-                    <i class="fa-solid fa-plus"></i> New Check-In Audit
+                <button onclick="app.createNewReport()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium flex-1 sm:flex-none justify-center flex items-center gap-2 transition-colors shadow-sm">
+                    <i class="fa-solid fa-plus"></i> New Check-Out Audit
                 </button>
             </div>
         </header>
@@ -140,7 +144,7 @@
             <div id="empty-state" class="p-12 text-center text-slate-500 flex flex-col items-center hidden">
                 <i class="fa-solid fa-folder-open text-5xl text-slate-300 mb-4"></i>
                 <p class="text-lg">No audit reports filed yet.</p>
-                <p class="text-sm mt-1">Click the "New Check-In Audit" button to get started.</p>
+                <p class="text-sm mt-1">Click the "New Check-Out Audit" button to get started.</p>
             </div>
 
             <ul id="report-list" class="divide-y divide-slate-100">
@@ -197,13 +201,13 @@
                 <button onclick="app.refreshReport()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 p-2 sm:px-4 sm:py-2 rounded-lg font-medium flex items-center justify-center transition-colors" title="Clear and reset form">
                     <i class="fa-solid fa-arrows-rotate text-slate-500"></i><span class="hidden sm:inline ml-2">Refresh</span>
                 </button>
-                <button onclick="app.togglePreview()" class="bg-sky-50 hover:bg-sky-100 text-sky-700 px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-medium flex-1 sm:flex-none flex items-center justify-center gap-2 transition-colors text-sm sm:text-base">
+                <button onclick="app.togglePreview()" class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-medium flex-1 sm:flex-none flex items-center justify-center gap-2 transition-colors text-sm sm:text-base">
                     <i class="fa-solid fa-eye"></i> Preview
                 </button>
                 <button onclick="app.saveReport()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-medium flex-1 sm:flex-none flex items-center justify-center gap-2 transition-colors text-sm sm:text-base">
                     <i class="fa-solid fa-save text-slate-500"></i> Save
                 </button>
-                <button onclick="window.print()" class="bg-sky-600 hover:bg-sky-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-medium w-full sm:w-auto flex items-center justify-center gap-2 transition-colors text-sm sm:text-base mt-1 sm:mt-0">
+                <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-medium w-full sm:w-auto flex items-center justify-center gap-2 transition-colors text-sm sm:text-base mt-1 sm:mt-0">
                     <i class="fa-solid fa-file-pdf"></i> Export PDF
                 </button>
             </div>
@@ -212,40 +216,44 @@
         <!-- Report Header / Metadata -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-8 mb-6 print-shadow-none print-border print:p-4 print:mb-2">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4 gap-4 print:mb-2 print:pb-2">
-                <h2 class="text-xl sm:text-2xl font-bold text-slate-900 print:text-lg">Check-In Audit Report</h2>
-                <div id="score-summary" class="bg-sky-50 text-sky-800 px-4 py-2 rounded-lg font-bold text-lg border border-sky-200 print:border-none print:bg-transparent print:text-black print:p-0">
-                    Score: 0% <span class="text-sm font-normal text-sky-700 print:text-black">(0/0 pts)</span>
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-900 print:text-lg">Check-Out Audit Checklist</h2>
+                
+                <!-- Score Display -->
+                <div class="w-full sm:w-auto text-center bg-slate-50 rounded-xl p-3 border border-slate-200 min-w-[120px]">
+                    <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Audit Score</div>
+                    <div id="score-percentage" class="text-2xl font-bold text-slate-800">0%</div>
+                    <div id="score-details" class="text-xs text-slate-400 mt-1">0 pts</div>
                 </div>
             </div>
             
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-2 print:gap-2 print:mb-0">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-2">
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Date</label>
-                    <input type="date" id="meta-date" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-sky-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('date', this.value)">
+                    <input type="date" id="meta-date" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base print:text-xs" onchange="app.updateMeta('date', this.value)">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Time</label>
-                    <input type="time" id="meta-time" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-sky-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('time', this.value)">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Auditor Name</label>
-                    <input type="text" id="meta-auditorName" placeholder="Name" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-sky-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('auditorName', this.value)">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Supervisor on Shift</label>
-                    <input type="text" id="meta-supervisor" placeholder="Supervisor Name" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-sky-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('supervisor', this.value)">
+                    <input type="time" id="meta-time" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base print:text-xs" onchange="app.updateMeta('time', this.value)">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Guest Name</label>
-                    <input type="text" id="meta-guestName" placeholder="Guest Name" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-sky-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('guestName', this.value)">
+                    <input type="text" id="meta-guestName" placeholder="Guest Name" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base print:text-xs" onchange="app.updateMeta('guestName', this.value)">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Room No</label>
-                    <input type="text" id="meta-roomNo" placeholder="Room No" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-sky-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('roomNo', this.value)">
+                    <input type="text" id="meta-roomNo" placeholder="Room No" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base print:text-xs" onchange="app.updateMeta('roomNo', this.value)">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">GSA Name</label>
-                    <input type="text" id="meta-gsaName" placeholder="GSA Name" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-sky-600 transition-colors bg-transparent text-slate-800 font-medium text-base" onchange="app.updateMeta('gsaName', this.value)">
+                    <input type="text" id="meta-gsaName" placeholder="GSA Name" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base print:text-xs" onchange="app.updateMeta('gsaName', this.value)">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Supervisor on Shift</label>
+                    <input type="text" id="meta-supervisor" placeholder="Supervisor Name" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base print:text-xs" onchange="app.updateMeta('supervisor', this.value)">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Auditor Name</label>
+                    <input type="text" id="meta-auditor" placeholder="Auditor Name" class="w-full border-b-2 border-slate-200 py-2 focus:outline-none focus:border-blue-600 transition-colors bg-transparent text-slate-800 font-medium text-base print:text-xs" onchange="app.updateMeta('auditor', this.value)">
                 </div>
             </div>
         </div>
@@ -265,7 +273,7 @@
                     <i class="fa-solid fa-camera"></i> Attach Photos
                 </button>
             </div>
-            <textarea id="meta-observation" rows="5" placeholder="Enter any final overall observations..." class="w-full border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-sky-600 transition-all text-base text-slate-800 print:hidden" onchange="app.updateMeta('observation', this.value)" oninput="document.getElementById('print-meta-observation').textContent = this.value"></textarea>
+            <textarea id="meta-observation" rows="5" placeholder="Enter any final overall observations..." class="w-full border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all text-base text-slate-800 print:hidden" onchange="app.updateMeta('observation', this.value)" oninput="document.getElementById('print-meta-observation').textContent = this.value"></textarea>
             
             <!-- Mirror Div for Print (Guarantees text won't be cut off in PDF export) -->
             <div id="print-meta-observation" class="hidden print:block w-full text-base text-slate-800 whitespace-pre-wrap min-h-[100px] print:text-xs print:min-h-[30px]"></div>
@@ -294,36 +302,33 @@
             }[tag]));
         }
 
+        // Ensured all items are consistent objects to prevent "match of undefined" errors.
         const AUDIT_QUESTIONS = [
-            { text: "[Check-In] Did the GSA make an eye contact with the guests and smile?", points: 1 },
-            { text: "[Check-In] Was the guest greeted in a warm & friendly manner?", points: 1 },
-            { text: "[Check-In] Did the team member ask for name, personal ID and find reservation in Opera?", points: 1 },
-            { text: "[Check-In] Was the guest guided to the welcome corner?", points: 1 },
-            { text: "[Check-In] Member - Did the team member welcome the guest back to property if previously visited.", points: 1 },
-            { text: "[Check-In] Members - Confirm and recognize membership level and eligible benefits.", points: 1 },
-            { text: "[Check-In] Non Member - Ask if guest is willing to join the program and mention the potential benefits", points: 1 },
-            { text: "[Check-In] Did the team member try upselling of room", points: 1 },
-            { text: "[Check-In] Confirm reservation details from the system (stay length, room type, departure date).", points: 1 },
-            { text: "[Check-In] Present registration card for review and signature. Ask for billing address.", points: 1 },
-            { text: "[Check-In] Verify that the email ID is correctly captured and reconfirmed during the check-in process.", points: 1 },
-            { text: "[Check-In] Request payment details as per local credit policy", points: 1 },
-            { text: "[Check-In] Was B'Fast location & timing explained to the guest?", points: 1 },
-            { text: "[Check-In] Was Food & Beverage facilities explained to the guest?", points: 1 },
-            { text: "[Check-In] Was SPA, fitness centre, wet area and swimming pool timing explained?", points: 1 },
-            { text: "[Check-In] Was Wi-fi connection process explained?", points: 1 },
-            { text: "[Check-In] Was the guest explained, room cleaning will be done only post 13.00hrs?", points: 1 },
-            { text: "[Check-In] Are the guests informed about renovation timings?", points: 1 },
-            { text: "[Check-In] Offer assistance with luggage to the guest?", points: 1 },
-            { text: "[Check-In] Accommodate any special requests if requested, where possible?", points: 1 },
-            { text: "[Check-In] Did the hotel associate wish the guest an enjoyable stay?", points: 1 },
-            { text: "[Check-In] Did the GRE escort the guest to identify the luggage?", points: 1 },
-            { text: "[Check-In] Was there an interaction between the guest and the associate?", points: 1 },
-            { text: "[Check-In] Did the complete check in procedure take no more than five minutes?", points: 1 },
-            { text: "[Check-In] Staff should demonstrate the Service Golden Rules at all times.", points: 1 },
-            { text: "[Check-In] Were the guests informed about renovation work being carried out and its timing?", points: 1 },
+            { text: "Did the GSA make an eye contact with the guests and smile?", points: 1 },
+            { text: "Was the guest greeted in a warm & friendly manner?", points: 1 },
+            { text: "Acknowledging the Guest - Namaste Mr. (if guest name is known) May I Help you.", points: 1 },
+            { text: "Ask for Name and Room Number to display bill information.", points: 1 },
+            { text: "Tone of Voice - Enquiring the guest about their stay.", points: 1 },
+            { text: "If Non- Member - Enquire the guest would be interested in becoming member (as its last chance to do so prior to check-out).", points: 1 },
+            { text: "If member thank the guest for being Radisson Reward Member.", points: 1 },
+            { text: "Did the staff member capture the correct email address to facilitate the digital invoice?", points: 1 },
+            { text: "Billing - Bill details Checked (E-mail, Address, Company Name & GST number).", points: 1 },
+            { text: "Digital / Printed Invoice - Was Invoice shown to guest for review.", points: 1 },
+            { text: "Mode of Payment - If member Confirm Payment Method (Radisson rewards, Redemption night, Cash, Card, BTC & others).", points: 1 },
+            { text: "Guest Invoice - Inform the guest that their Invoice would be sent digitally.", points: 1 },
+            { text: "Was there an interaction between the guest and the associate?", points: 1 },
+            { text: "Interaction by GRE / D.M - Duty manager/GRE spoke interaction with the guest.", points: 1 },
+            { text: "Did staff demonstrate Service Golden Rules through Check-Out Process?", points: 1 },
+            { text: "Farewell - Upon check-out, thank the guests for staying with us.", points: 1 },
+            { text: "Bot shot feedback obtained.", points: 1 },
+            { text: "Feedback Request - Review Pro and Other Social Medial Platform.", points: 1 },
+            { text: "Guest Feedback.", points: 1 },
+            { text: "Time - Time taken for check-out.", points: 1 },
+            { text: "Was the key card collected from guest.", points: 1 },
             { text: "[Lobby Area] Has the furniture been arranged properly?", points: 1 },
             { text: "[Lobby Area] Are the cushions positioned correctly?", points: 1 },
-            { text: "[Lobby Area] Has housekeeping been informed of any stain found on the upholstered items?", points: 1 }
+            { text: "[Lobby Area] Has housekeeping been informed of any staining found on the upholstered items?", points: 1 },
+            { text: "[Lobby Area] Are the carpets free from visible stains or damages?", points: 1 }
         ];
 
         const app = {
@@ -331,8 +336,8 @@
             currentReportId: null,
             
             init() {
-                // Unique key for the Check-In Audits
-                const stored = localStorage.getItem('hotelCheckInAuditsV1');
+                // Unique key for the Check-Out Audits
+                const stored = localStorage.getItem('hotelCheckOutAuditsV1');
                 if (stored) {
                     try {
                         this.reports = JSON.parse(stored);
@@ -344,7 +349,7 @@
             },
 
             saveToLocal() {
-                localStorage.setItem('hotelCheckInAuditsV1', JSON.stringify(this.reports));
+                localStorage.setItem('hotelCheckOutAuditsV1', JSON.stringify(this.reports));
                 
                 const statusIndicator = document.getElementById('save-status');
                 const statusIndicatorMobile = document.getElementById('save-status-mobile');
@@ -393,11 +398,11 @@
                     meta: {
                         date: new Date().toISOString().split('T')[0],
                         time: '',
-                        auditorName: '',
                         guestName: '',
                         roomNo: '',
                         gsaName: '',
                         supervisor: '',
+                        auditor: '',
                         observation: ''
                     },
                     generalPhotos: [],
@@ -423,7 +428,7 @@
 
             deleteReport(id, event) {
                 event.stopPropagation();
-                if(confirm("Move this Check-In report to the trash?")) {
+                if(confirm("Move this Check-Out report to the trash?")) {
                     const report = this.reports.find(r => r.id === id);
                     if (report) {
                         report.deletedAt = Date.now();
@@ -461,8 +466,7 @@
                     if(report) {
                         report.meta = {
                             date: new Date().toISOString().split('T')[0],
-                            time: '', auditorName: '', guestName: '', roomNo: '', 
-                            gsaName: '', supervisor: '', observation: ''
+                            time: '', guestName: '', gsaName: '', roomNo: '', supervisor: '', auditor: '', observation: ''
                         };
                         report.generalPhotos = [];
                         AUDIT_QUESTIONS.forEach((q, idx) => {
@@ -471,6 +475,42 @@
                         this.saveToLocal();
                         this.renderEditor();
                     }
+                }
+            },
+
+            calculateScore(report) {
+                let earnedPoints = 0;
+                let totalPossible = 0;
+                
+                AUDIT_QUESTIONS.forEach((qObj, i) => {
+                    const itemPoints = qObj.points || 1;
+                    const item = report.items[i];
+                    // If N/A or unevaluated, it does not contribute to the total possible denominator
+                    if (item && (item.status === 'compliant' || item.status === 'non-compliant')) {
+                        totalPossible += itemPoints;
+                        if (item.status === 'compliant') {
+                            earnedPoints += itemPoints;
+                        }
+                    }
+                });
+                
+                const percentage = totalPossible > 0 ? Math.round((earnedPoints / totalPossible) * 100) : 0;
+                return { compliant: earnedPoints, total: totalPossible, percentage };
+            },
+
+            updateScoreUI() {
+                const report = this.getCurrentReport();
+                if (!report) return;
+                const score = this.calculateScore(report);
+                
+                const pctEl = document.getElementById('score-percentage');
+                const detEl = document.getElementById('score-details');
+                if (pctEl && detEl) {
+                    pctEl.textContent = `${score.percentage}%`;
+                    detEl.textContent = `${score.compliant}/${score.total} pts`;
+                    
+                    // Update color based on score
+                    pctEl.className = `text-2xl font-bold print:text-black ${score.percentage >= 80 ? 'text-green-600' : score.percentage >= 50 ? 'text-amber-500' : 'text-red-600'}`;
                 }
             },
 
@@ -490,7 +530,8 @@
                 if (report) {
                     report.items[index].status = (report.items[index].status === status) ? null : status;
                     this.saveToLocal();
-                    this.renderChecklist(); 
+                    this.renderChecklist();
+                    this.updateScoreUI();
                 }
             },
 
@@ -614,6 +655,7 @@
                 activeReports.forEach(report => {
                     const guestInfo = report.meta.guestName ? `Guest: ${escapeHTML(report.meta.guestName)}` : "No Guest Name";
                     const date = report.meta.date || "No Date";
+                    const scoreObj = this.calculateScore(report);
                     
                     const li = document.createElement('li');
                     li.className = "p-4 hover:bg-slate-50 cursor-pointer transition-colors flex items-center justify-between group";
@@ -621,8 +663,8 @@
                     
                     li.innerHTML = `
                         <div class="flex items-center gap-4">
-                            <div class="bg-sky-100 p-3 rounded-lg text-sky-600">
-                                <i class="fa-solid fa-concierge-bell text-xl"></i>
+                            <div class="bg-blue-100 p-3 rounded-lg text-blue-600">
+                                <i class="fa-solid fa-plane-departure text-xl"></i>
                             </div>
                             <div>
                                 <h3 class="font-semibold text-slate-900 text-lg">
@@ -631,6 +673,8 @@
                                 <div class="flex items-center gap-3 text-sm text-slate-500 mt-1">
                                     <span><i class="fa-regular fa-calendar mr-1"></i> ${escapeHTML(date)}</span>
                                     ${report.meta.roomNo ? `<span>•</span><span>Room: ${escapeHTML(report.meta.roomNo)}</span>` : ''}
+                                    <span>•</span>
+                                    <span class="${scoreObj.percentage >= 80 ? 'text-green-600' : scoreObj.percentage >= 50 ? 'text-amber-500' : 'text-red-500'} font-medium">Score: ${scoreObj.percentage}%</span>
                                 </div>
                             </div>
                         </div>
@@ -684,7 +728,7 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="app.restoreReport('${report.id}', event)" class="px-3 py-1.5 text-sky-600 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors font-medium flex items-center gap-2" title="Restore Report">
+                            <button onclick="app.restoreReport('${report.id}', event)" class="px-3 py-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors font-medium flex items-center gap-2" title="Restore Report">
                                 <i class="fa-solid fa-arrow-rotate-left"></i> Restore
                             </button>
                         </div>
@@ -697,36 +741,36 @@
                 const report = this.getCurrentReport();
                 if (!report) return;
 
+                // Populate Metadata
                 document.getElementById('meta-date').value = report.meta.date || '';
                 document.getElementById('meta-time').value = report.meta.time || '';
-                document.getElementById('meta-auditorName').value = report.meta.auditorName || '';
-                document.getElementById('meta-supervisor').value = report.meta.supervisor || '';
                 document.getElementById('meta-guestName').value = report.meta.guestName || '';
-                document.getElementById('meta-roomNo').value = report.meta.roomNo || '';
                 document.getElementById('meta-gsaName').value = report.meta.gsaName || '';
+                document.getElementById('meta-roomNo').value = report.meta.roomNo || '';
+                document.getElementById('meta-supervisor').value = report.meta.supervisor || '';
+                document.getElementById('meta-auditor').value = report.meta.auditor || '';
                 
                 document.getElementById('meta-observation').value = report.meta.observation || '';
                 document.getElementById('print-meta-observation').textContent = report.meta.observation || '';
 
                 this.renderChecklist();
                 this.renderGeneralPhotos();
+                this.updateScoreUI();
             },
 
             renderChecklist() {
                 const report = this.getCurrentReport();
                 const container = document.getElementById('checklist-container');
                 container.innerHTML = '';
-                
+
                 let currentCategoryRender = '';
-                let totalEarned = 0;
-                let totalPossible = 0;
 
                 AUDIT_QUESTIONS.forEach((qObj, index) => {
-                    const question = qObj.text;
-                    const itemPoints = qObj.points;
+                    // Safety fallback: if qObj is a raw string instead of an object, safely convert it on the fly.
+                    const questionText = qObj.text !== undefined ? qObj.text : String(qObj);
+                    const itemPoints = qObj.points !== undefined ? qObj.points : 1;
 
-                    const itemData = report.items[index] || { status: null, remarks: '', photos: [] };
-                    if (!itemData.photos) itemData.photos = [];
+                    const itemData = report.items[index] || { status: null, remarks: '' };
                     
                     const isCompliant = itemData.status === 'compliant';
                     const isNonCompliant = itemData.status === 'non-compliant';
@@ -734,24 +778,21 @@
 
                     let itemScoreDisplay = `- / ${itemPoints}`;
                     if (isCompliant) {
-                        totalEarned += itemPoints;
-                        totalPossible += itemPoints;
                         itemScoreDisplay = `${itemPoints} / ${itemPoints}`;
                     } else if (isNonCompliant) {
-                        totalPossible += itemPoints;
                         itemScoreDisplay = `0 / ${itemPoints}`;
                     } else if (isNA) {
                         itemScoreDisplay = `N/A`;
                     }
 
-                    const match = question.match(/^\[(.*?)\]/);
-                    let categoryTitle = match ? escapeHTML(match[1]) : 'General Audit';
-                    let cleanQuestion = escapeHTML(question.replace(/^\[(.*?)\]\s*/, ''));
+                    const match = questionText.match(/^\[(.*?)\]/);
+                    let categoryTitle = match ? escapeHTML(match[1]) : 'Check-Out Process';
+                    let cleanQuestion = escapeHTML(questionText.replace(/^\[(.*?)\]\s*/, ''));
                     
                     if (categoryTitle && categoryTitle !== currentCategoryRender) {
                         const header = document.createElement('div');
-                        header.className = "bg-sky-50 border-y border-sky-100 px-4 sm:px-6 py-3 mt-4 first:mt-0 avoid-break print:bg-slate-100 print:border-slate-300 print:mt-1 print:py-1 print:px-2";
-                        header.innerHTML = `<h3 class="text-base sm:text-lg font-bold text-sky-900 uppercase tracking-wide print:text-black">${categoryTitle}</h3>`;
+                        header.className = "bg-blue-50 border-y border-blue-100 px-4 sm:px-6 py-3 mt-4 first:mt-0 avoid-break print:bg-slate-100 print:border-slate-300 print:mt-1 print:py-1 print:px-2";
+                        header.innerHTML = `<h3 class="text-base sm:text-lg font-bold text-blue-900 uppercase tracking-wide print:text-black">${categoryTitle}</h3>`;
                         container.appendChild(header);
                         currentCategoryRender = categoryTitle;
                     }
@@ -759,24 +800,17 @@
                     const row = document.createElement('div');
                     row.className = "p-4 sm:p-6 hover:bg-slate-50/50 transition-colors avoid-break border-b border-slate-100 last:border-0 print:p-1.5 print:py-1";
 
-                    let remarksContentHtml = `
-                        <textarea rows="2" 
-                            onchange="app.updateItemRemarks(${index}, this.value)"
-                            oninput="this.nextElementSibling.textContent = this.value"
-                            placeholder="Add remarks..." 
-                            class="w-full text-base sm:text-sm p-2 border border-slate-200 rounded-md focus:ring-2 focus:ring-sky-600 focus:border-sky-600 outline-none print:hidden resize-none">${escapeHTML(itemData.remarks)}</textarea>
-                        
-                        <div class="hidden print:block whitespace-pre-wrap print:text-[10px] print:leading-tight print:pt-0.5">${escapeHTML(itemData.remarks || '')}</div>
-                    `;
-
                     row.innerHTML = `
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-start print:gap-1">
+                            <!-- Question -->
                             <div class="md:col-span-5 pr-0 md:pr-4">
                                 <div class="flex items-start flex-wrap gap-y-2 print:gap-y-0.5">
                                     <span class="text-slate-400 text-sm font-bold mr-2 mt-1 print:text-[10px] print:mt-0">${index + 1}.</span>
                                     <span class="text-slate-800 font-medium print:text-[10px] print:leading-tight flex-1">${cleanQuestion}</span>
                                 </div>
+                                
                                 <div class="flex items-center mt-2 font-bold text-sm print:mt-0.5 print:text-[10px]">
+                                    <!-- Print Only Status Display -->
                                     <div class="hidden print:block mr-3">
                                         Status: 
                                         ${isCompliant ? '<span class="text-green-600 border border-green-600 px-2 py-0.5 rounded print:px-1 print:py-0">Compliant</span>' : 
@@ -784,45 +818,47 @@
                                          isNA ? '<span class="text-slate-500 border border-slate-500 px-2 py-0.5 rounded print:px-1 print:py-0">N/A</span>' :
                                          '<span class="text-slate-400 border border-slate-300 px-2 py-0.5 rounded print:px-1 print:py-0">Not Evaluated</span>'}
                                     </div>
-                                    <span class="text-sky-600 bg-sky-50 px-2 py-1 rounded border border-sky-100 print:border-none print:bg-transparent print:p-0 print:text-black">
+                                    <span class="text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-100 print:border-none print:bg-transparent print:p-0 print:text-black">
                                         Score: ${itemScoreDisplay}
                                     </span>
                                 </div>
                             </div>
 
+                            <!-- Status Buttons (Hidden in Print & Preview) -->
                             <div class="md:col-span-4 flex gap-1.5 sm:gap-2 justify-center no-print">
                                 <button onclick="app.updateItemStatus(${index}, 'compliant')" 
-                                    class="status-btn flex-1 py-3 md:py-2 px-1 sm:px-2 border border-slate-200 rounded-md text-xs sm:text-sm font-medium transition-colors ${isCompliant ? 'selected-compliant' : 'text-sky-600 hover:bg-slate-100'}">
-                                    <i class="fa-solid fa-check mr-1 hidden sm:inline"></i>Yes
+                                    class="status-btn flex-1 py-3 md:py-2 px-1 sm:px-2 border border-slate-200 rounded-md text-xs sm:text-sm font-medium transition-colors ${isCompliant ? 'selected-compliant' : 'text-blue-600 hover:bg-slate-100'}">
+                                    <i class="fa-solid fa-check mr-1 hidden sm:inline"></i> Yes
                                 </button>
                                 <button onclick="app.updateItemStatus(${index}, 'non-compliant')" 
-                                    class="status-btn flex-1 py-3 md:py-2 px-1 sm:px-2 border border-slate-200 rounded-md text-xs sm:text-sm font-medium transition-colors ${isNonCompliant ? 'selected-non-compliant' : 'text-sky-600 hover:bg-slate-100'}">
-                                    <i class="fa-solid fa-xmark mr-1 hidden sm:inline"></i>No
+                                    class="status-btn flex-1 py-3 md:py-2 px-1 sm:px-2 border border-slate-200 rounded-md text-xs sm:text-sm font-medium transition-colors ${isNonCompliant ? 'selected-non-compliant' : 'text-blue-600 hover:bg-slate-100'}">
+                                    <i class="fa-solid fa-xmark mr-1 hidden sm:inline"></i> No
                                 </button>
                                 <button onclick="app.updateItemStatus(${index}, 'na')" 
                                     class="status-btn flex-1 py-3 md:py-2 px-1 sm:px-2 border border-slate-200 rounded-md text-xs sm:text-sm font-medium transition-colors ${isNA ? 'selected-na' : 'text-slate-500 hover:bg-slate-100'}">
-                                    <i class="fa-solid fa-minus mr-1 hidden sm:inline"></i>N/A
+                                    <i class="fa-solid fa-minus mr-1 hidden sm:inline"></i> N/A
                                 </button>
                             </div>
 
+                            <!-- Remarks Action -->
                             <div class="md:col-span-3 flex flex-col gap-2 print:gap-0.5 print:mt-0 print:border-none print:pt-0">
-                                ${remarksContentHtml}
+                                <textarea rows="2" 
+                                    onchange="app.updateItemRemarks(${index}, this.value)"
+                                    oninput="this.nextElementSibling.textContent = this.value"
+                                    placeholder="Add remarks..." 
+                                    class="w-full text-base sm:text-sm p-2 border border-slate-200 rounded-md focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none print:hidden resize-none">${escapeHTML(itemData.remarks)}</textarea>
+                                
+                                <div class="hidden print:block whitespace-pre-wrap print:text-[10px] print:leading-tight print:pt-0.5">${escapeHTML(itemData.remarks || '')}</div>
                             </div>
                         </div>
                     `;
                     
                     container.appendChild(row);
                 });
-                
-                // Update overall score summary
-                const scoreSummaryEl = document.getElementById('score-summary');
-                if (scoreSummaryEl) {
-                    const scorePercentage = totalPossible > 0 ? Math.round((totalEarned / totalPossible) * 100) : 0;
-                    scoreSummaryEl.innerHTML = `Score: ${scorePercentage}% <span class="text-sm font-normal text-sky-700 print:text-black">(${totalEarned}/${totalPossible} pts)</span>`;
-                }
             }
         };
 
+        // Initialize application on load
         window.onload = () => {
             app.init();
         };
