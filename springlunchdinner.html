@@ -66,6 +66,23 @@
         <i class="fa-solid fa-eye-slash"></i> Exit Preview
     </button>
 
+    <!-- Confirmation Modal -->
+    <div id="delete-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 transition-all transform scale-95 opacity-0" id="modal-content">
+            <div class="text-center">
+                <div class="bg-red-100 text-red-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                    <i class="fa-solid fa-trash-can"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-2">Delete Audit?</h3>
+                <p class="text-slate-500 text-sm mb-6">This action cannot be undone. All data and photos for this report will be permanently removed.</p>
+                <div class="flex gap-3">
+                    <button onclick="app.hideDeleteModal()" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors">Cancel</button>
+                    <button onclick="app.confirmDelete()" class="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors shadow-sm shadow-red-200">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="dashboard-view" class="max-w-5xl mx-auto p-4 sm:p-6 transition-opacity duration-300">
         <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-10 mt-4 sm:mt-6 gap-4">
             <div>
@@ -244,6 +261,7 @@
             reports: [],
             currentReportId: null,
             currentUploadIndex: null,
+            reportToDelete: null,
             
             init() {
                 const stored = localStorage.getItem('hotelSpringAuditsV1');
@@ -293,6 +311,39 @@
                 document.getElementById('editor-view').classList.remove('hidden');
             },
 
+            showDeleteModal(id, event) {
+                if (event) event.stopPropagation();
+                this.reportToDelete = id;
+                const modal = document.getElementById('delete-modal');
+                const content = document.getElementById('modal-content');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                setTimeout(() => {
+                    content.classList.remove('scale-95', 'opacity-0');
+                    content.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            },
+
+            hideDeleteModal() {
+                const modal = document.getElementById('delete-modal');
+                const content = document.getElementById('modal-content');
+                content.classList.add('scale-95', 'opacity-0');
+                content.classList.remove('scale-100', 'opacity-100');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                    this.reportToDelete = null;
+                }, 200);
+            },
+
+            confirmDelete() {
+                if (!this.reportToDelete) return;
+                this.reports = this.reports.filter(r => r.id !== this.reportToDelete);
+                this.saveToLocal();
+                this.hideDeleteModal();
+                this.renderDashboard();
+            },
+
             getCurrentReport() {
                 return this.reports.find(r => r.id === this.currentReportId);
             },
@@ -330,21 +381,18 @@
                 document.getElementById('count-non').textContent = nonCompliant;
             },
 
-            // High Clarity Compression Logic (Targeting < 10MB Total)
             compressImage(file, callback) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const img = new Image();
                     img.onload = function() {
                         const canvas = document.createElement('canvas');
-                        // INCREASED SIZE FOR BETTER CLARITY
                         const MAX = 800; 
                         let w = img.width, h = img.height;
                         if (w > h) { if (w > MAX) { h *= MAX/w; w = MAX; } }
                         else { if (h > MAX) { w *= MAX/h; h = MAX; } }
                         canvas.width = w; canvas.height = h;
                         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                        // INCREASED QUALITY TO 0.7
                         callback(canvas.toDataURL('image/jpeg', 0.7)); 
                     };
                     img.src = e.target.result;
@@ -408,7 +456,12 @@
                                 <div class="text-xs text-slate-500">${r.meta.date} • ${escapeHTML(r.meta.guestName || 'No Guest')}</div>
                             </div>
                         </div>
-                        <i class="fa-solid fa-chevron-right text-slate-300"></i>
+                        <div class="flex items-center gap-2">
+                            <button onclick="app.showDeleteModal('${r.id}', event)" class="no-print p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                            <i class="fa-solid fa-chevron-right text-slate-300"></i>
+                        </div>
                     `;
                     list.appendChild(li);
                 });
