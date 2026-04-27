@@ -614,7 +614,10 @@
                     const item = r.items[idx];
                     const cat = q.match(/\[(.*?)\]/)[1];
                     const question = q.replace(/\[(.*?)\]\s*/, '');
+                    
                     const isBOH = cat === "Back of the House";
+                    // Allows photos for Back of House, and indices 55 & 56 which correspond to Points 56 & 57 (Room Checks)
+                    const allowPhotos = isBOH || idx === 55 || idx === 56;
 
                     if (cat !== currentCat) {
                         const header = document.createElement('div');
@@ -709,7 +712,7 @@
                                     <p class="text-sm font-bold text-slate-800 print:text-[11px] leading-relaxed">${question}</p>
                                 </div>
                                 ${gridHtml}
-                                ${isBOH ? `<div class="mt-3 flex gap-3 overflow-x-auto print:flex-wrap print:mt-1">${photos}</div>` : ''}
+                                ${allowPhotos ? `<div class="mt-3 flex gap-3 overflow-x-auto print:flex-wrap print:mt-1">${photos}</div>` : ''}
                             </div>
                         `;
                     } else {
@@ -722,7 +725,7 @@
                                     </div>
                                     <div class="mt-3 no-print"><textarea oninput="this.parentElement.nextElementSibling.textContent = this.value || '---'" onchange="app.updateItemRemarks(${idx}, this.value)" class="w-full border border-slate-100 rounded-lg p-3 text-sm focus:ring-1 focus:ring-teal-500 outline-none transition-shadow" placeholder="Observations..." rows="2">${item.remarks}</textarea></div>
                                     <div class="hidden print-only text-[11px] text-slate-800 mt-2 font-medium whitespace-pre-wrap break-words">${item.remarks || '---'}</div>
-                                    ${isBOH ? `<div class="mt-3 flex gap-3 overflow-x-auto print:flex-wrap print:mt-1">${photos}</div>` : ''}
+                                    ${allowPhotos ? `<div class="mt-3 flex gap-3 overflow-x-auto print:flex-wrap print:mt-1">${photos}</div>` : ''}
                                 </div>
                                 <div class="no-print flex flex-col gap-2 min-w-[150px] w-full lg:w-auto">
                                     <div class="flex gap-1 w-full">
@@ -730,7 +733,7 @@
                                         <button onclick="app.updateItemStatus(${idx}, 'non-compliant')" class="status-btn flex-1 py-3 lg:py-2 border border-slate-100 rounded-lg text-[10px] font-black transition-all ${item.status === 'non-compliant' ? 'selected-non-compliant' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}">NO</button>
                                         <button onclick="app.updateItemStatus(${idx}, 'na')" class="status-btn flex-1 py-3 lg:py-2 border border-slate-100 rounded-lg text-[10px] font-black transition-all ${item.status === 'na' ? 'selected-na' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}">N/A</button>
                                     </div>
-                                    ${isBOH ? `<button onclick="app.triggerPhotoUpload(${idx})" class="text-[10px] font-black bg-slate-50 hover:bg-teal-50 text-slate-500 hover:text-teal-600 py-3 lg:py-2 rounded-lg border border-slate-100 transition-all uppercase tracking-tighter w-full"><i class="fa-solid fa-camera mr-1"></i> Add Evidence</button>` : ''}
+                                    ${allowPhotos ? `<button onclick="app.triggerPhotoUpload(${idx})" class="text-[10px] font-black bg-slate-50 hover:bg-teal-50 text-slate-500 hover:text-teal-600 py-3 lg:py-2 rounded-lg border border-slate-100 transition-all uppercase tracking-tighter w-full"><i class="fa-solid fa-camera mr-1"></i> Add Evidence</button>` : ''}
                                 </div>
                                 <div class="hidden print-only text-[10px] font-black text-right uppercase pt-1">[${item.status || 'PENDING'}]</div>
                             </div>
