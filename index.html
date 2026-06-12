@@ -160,7 +160,8 @@
                 { id: 'mod', name: 'MOD Checklist', file: 'modchecklist.html', icon: 'fa-user-tie', color: 'bg-slate-700', dept: 'mgmt', desc: 'Manager on Duty daily walkthrough' },
                 { id: 'mysouth', name: 'MySouth Audit', file: 'mysouth.html', icon: 'fa-pepper-hot', color: 'bg-rose-600', dept: 'fnb', desc: 'Signature restaurant standards' },
                 { id: 'springbfast', name: 'Spring Breakfast', file: 'springbreakfastaudit.html', icon: 'fa-mug-hot', color: 'bg-amber-500', dept: 'fnb', desc: 'Morning buffet & service audit' },
-                { id: 'springld', name: 'Spring Lunch/Dinner', file: 'springlunchdinner.html', icon: 'fa-utensils', color: 'bg-indigo-500', dept: 'fnb', desc: 'All-day dining operational check' }
+                { id: 'springld', name: 'Spring Lunch/Dinner', file: 'springlunchdinner.html', icon: 'fa-utensils', color: 'bg-indigo-500', dept: 'fnb', desc: 'All-day dining operational check' },
+                { id: 'wellness', name: 'Spa & Wellness Audit', file: 'spa_wellness_audit.html', icon: 'fa-spa', color: 'bg-indigo-600', dept: 'fnb', desc: 'Complete spa, wet area, and fitness audit' }
             ],
 
             init() {
@@ -184,7 +185,6 @@
                     : this.audits.filter(a => a.dept === filter);
 
                 filtered.forEach(audit => {
-                    // Simulating progress check from localStorage (as the sub-files use it)
                     const savedData = localStorage.getItem(`audit_data_${audit.id}`);
                     let progress = 0;
                     if (savedData) {
@@ -192,7 +192,7 @@
                             const parsed = JSON.parse(savedData);
                             const items = parsed.items || {};
                             const total = Object.keys(items).length;
-                            const answered = Object.values(items).filter(v => v.status !== 'pending').length;
+                            const answered = Object.values(items).filter(v => v.status !== 'pending' && v.status !== null).length;
                             progress = total > 0 ? Math.round((answered / total) * 100) : 0;
                         } catch(e) {}
                     }
@@ -234,8 +234,6 @@
 
             launchAudit(file) {
                 this.showToast(`Launching ${file}...`);
-                // In a real environment, this would navigate. 
-                // For this demo, we use window.location
                 setTimeout(() => {
                     window.location.href = file;
                 }, 500);
@@ -250,20 +248,19 @@
                             const parsed = JSON.parse(savedData);
                             const items = parsed.items || {};
                             const total = Object.keys(items).length;
-                            const answered = Object.values(items).filter(v => v.status !== 'pending').length;
+                            const answered = Object.values(items).filter(v => v.status !== 'pending' && v.status !== null).length;
                             totalProgress += total > 0 ? (answered / total) : 0;
                         } catch(e) {}
                     }
                 });
                 
-                const avg = Math.round((totalProgress / this.audits.length) * 100);
+                const avg = this.audits.length > 0 ? Math.round((totalProgress / this.audits.length) * 100) : 0;
                 document.getElementById('completion-stats').innerText = `${avg}% TOTAL COMPLETION`;
                 document.getElementById('avg-score').innerText = `${avg}%`;
             },
 
             filter(dept) {
                 this.renderAudits(dept);
-                // Update UI buttons
                 const buttons = document.querySelectorAll('button[onclick^="dashboard.filter"]');
                 buttons.forEach(btn => {
                     if (btn.getAttribute('onclick').includes(dept)) {
@@ -276,7 +273,6 @@
 
             syncAll() {
                 this.showToast("Synchronizing with server...");
-                // Mock sync logic
                 const icon = document.querySelector('.fa-rotate');
                 icon.classList.add('fa-spin');
                 setTimeout(() => {
